@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Гонки 🏎️</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -11,31 +12,34 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            height: 100%;
             font-family: -apple-system, 'Segoe UI', sans-serif;
-            padding: 20px;
+            padding: 8px;
             overflow: hidden;
             position: fixed;
             width: 100%;
-            height: 100%;
             top: 0;
             left: 0;
             touch-action: none;
         }
         .game-wrap {
             background: #16213e;
-            padding: 20px;
-            border-radius: 20px;
+            padding: 10px;
+            border-radius: 16px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.5);
             position: relative;
-            width: 400px;
-            max-width: 100%;
+            width: 100%;
+            max-width: 400px;
+            max-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
         .hud {
             display: flex;
             justify-content: space-between;
             color: white;
-            margin-bottom: 12px;
-            font-size: 14px;
+            margin-bottom: 8px;
+            font-size: 13px;
             gap: 6px;
         }
         .hud span { font-weight: bold; color: #4ecca3; }
@@ -43,25 +47,28 @@
         .hud .wallet-tag { color: #ffd700; }
         canvas {
             background: #2d2d44;
-            border-radius: 12px;
+            border-radius: 10px;
             display: block;
             touch-action: none;
-            max-width: 100%;
+            width: 100%;
+            height: auto;
+            max-height: calc(100vh - 200px);
+            object-fit: contain;
         }
         .controls {
             display: flex;
             justify-content: space-between;
-            margin-top: 12px;
-            gap: 10px;
+            margin-top: 8px;
+            gap: 8px;
         }
         .btn {
             flex: 1;
-            padding: 14px;
+            padding: 12px;
             background: #4ecca3;
             color: #1a1a2e;
             border: none;
             border-radius: 10px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
             cursor: pointer;
             user-select: none;
@@ -72,20 +79,20 @@
         .hint {
             color: #888;
             text-align: center;
-            margin-top: 10px;
-            font-size: 12px;
+            margin-top: 6px;
+            font-size: 11px;
         }
 
         .sound-btn {
             position: absolute;
-            top: 20px;
-            right: 20px;
+            top: 12px;
+            right: 12px;
             background: rgba(255,255,255,0.1);
             color: white;
             border: 2px solid rgba(255,255,255,0.2);
-            border-radius: 10px;
-            padding: 8px 12px;
-            font-size: 14px;
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 12px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.2s;
@@ -98,41 +105,40 @@
             border-color: #4ecca3;
         }
 
-        /* Экраны (меню, магазин, game over) */
         .screen {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(22, 33, 62, 0.97);
-            border-radius: 20px;
+            border-radius: 16px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 24px;
+            padding: 16px;
             z-index: 10;
             overflow-y: auto;
         }
         .screen.hidden { display: none; }
         .screen h2 {
             color: white;
-            margin-bottom: 20px;
-            font-size: 24px;
+            margin-bottom: 14px;
+            font-size: 20px;
             text-align: center;
         }
         .screen .wallet {
             color: #ffd700;
-            font-size: 18px;
+            font-size: 15px;
             font-weight: bold;
-            margin-bottom: 20px;
+            margin-bottom: 14px;
         }
         .menu-btn {
             width: 100%;
-            max-width: 280px;
-            padding: 16px;
-            margin-bottom: 10px;
+            max-width: 260px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
             border: none;
-            border-radius: 12px;
-            font-size: 17px;
+            border-radius: 10px;
+            font-size: 15px;
             font-weight: bold;
             cursor: pointer;
             transition: transform 0.15s, box-shadow 0.15s;
@@ -150,16 +156,15 @@
         .menu-btn.hard   { background: #e94560; }
         .menu-btn.shop   { background: #9b59b6; }
         .menu-btn.back   { background: #555; }
-        .menu-btn small { font-weight: normal; font-size: 12px; opacity: 0.9; }
+        .menu-btn small { font-weight: normal; font-size: 11px; opacity: 0.9; }
 
-        /* Магазин */
         .shop-item {
             width: 100%;
-            max-width: 320px;
+            max-width: 300px;
             background: rgba(255,255,255,0.08);
-            border-radius: 12px;
-            padding: 12px 16px;
-            margin-bottom: 10px;
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -177,27 +182,27 @@
         .shop-item .info {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
         .shop-item .color-preview {
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
         .shop-item .name {
             font-weight: bold;
-            font-size: 15px;
+            font-size: 14px;
         }
         .shop-item .desc {
-            font-size: 12px;
+            font-size: 11px;
             color: #aaa;
         }
         .shop-item .buy-btn {
-            padding: 8px 14px;
+            padding: 6px 12px;
             border: none;
             border-radius: 8px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: bold;
             cursor: pointer;
             background: #4ecca3;
@@ -215,26 +220,26 @@
 
         .section-title {
             color: #f9a826;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
-            margin: 16px 0 10px;
+            margin: 12px 0 8px;
             align-self: flex-start;
-            max-width: 320px;
+            max-width: 300px;
             width: 100%;
         }
 
         .bonus-row {
             display: flex;
-            gap: 8px;
-            max-width: 320px;
+            gap: 6px;
+            max-width: 300px;
             width: 100%;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
         .bonus-item {
             flex: 1;
             background: rgba(255,255,255,0.08);
-            border-radius: 10px;
-            padding: 10px 6px;
+            border-radius: 8px;
+            padding: 8px 4px;
             text-align: center;
             color: white;
             cursor: pointer;
@@ -248,28 +253,27 @@
             border-color: #4ecca3;
             background: rgba(78, 204, 163, 0.2);
         }
-        .bonus-item .icon { font-size: 22px; }
-        .bonus-item .title { font-size: 12px; font-weight: bold; margin-top: 4px; }
-        .bonus-item .price { font-size: 11px; color: #ffd700; margin-top: 2px; }
+        .bonus-item .icon { font-size: 18px; }
+        .bonus-item .title { font-size: 11px; font-weight: bold; margin-top: 2px; }
+        .bonus-item .price { font-size: 10px; color: #ffd700; margin-top: 2px; }
     </style>
 </head>
 <body>
     <div class="game-wrap">
-        <button class="sound-btn" id="soundBtn">🔇 Звук выкл</button>
+        <button class="sound-btn" id="soundBtn">🔇 Звук</button>
 
         <div class="hud">
             <div>Очки: <span id="score">0</span></div>
             <div>🪙 <span class="wallet-tag" id="wallet">0</span></div>
-            <div>Уровень: <span class="level-tag" id="levelName">—</span></div>
+            <div>Ур.: <span class="level-tag" id="levelName">—</span></div>
         </div>
         <canvas id="game" width="360" height="540"></canvas>
         <div class="controls">
             <button class="btn" id="leftBtn">◀ Влево</button>
             <button class="btn" id="rightBtn">Вправо ▶</button>
         </div>
-        <div class="hint">Управление: ← → или A / D, либо кнопки ниже</div>
+        <div class="hint">← → или A / D, либо кнопки</div>
 
-        <!-- Главное меню -->
         <div class="screen" id="mainMenu">
             <h2>🏁 Выбери уровень</h2>
             <div class="wallet">🪙 Копилка: <span id="walletMenu">0</span></div>
@@ -291,7 +295,6 @@
             </button>
         </div>
 
-        <!-- Магазин -->
         <div class="screen hidden" id="shopMenu">
             <h2>🛒 Магазин</h2>
             <div class="wallet">🪙 Копилка: <span id="walletShop">0</span></div>
@@ -308,7 +311,7 @@
                 </div>
                 <div class="bonus-item" data-bonus="slow">
                     <div class="icon">⏱️</div>
-                    <div class="title">Замедление</div>
+                    <div class="title">Замедл.</div>
                     <div class="price">3 🪙</div>
                 </div>
                 <div class="bonus-item" data-bonus="x2">
@@ -318,14 +321,13 @@
                 </div>
             </div>
 
-            <button class="menu-btn back" id="closeShopBtn" style="margin-top: 16px;">
+            <button class="menu-btn back" id="closeShopBtn" style="margin-top: 12px;">
                 <span>← Назад</span>
             </button>
         </div>
     </div>
 
     <script>
-        // ========== ДАННЫЕ ИГРОКА ==========
         const CARS = [
             { id: 'green',  name: 'Зелёная',  color: '#4ecca3', price: 0   },
             { id: 'blue',   name: 'Синяя',    color: '#3498db', price: 10  },
@@ -358,7 +360,6 @@
             return CARS.find(c => c.id === id) || CARS[0];
         }
 
-        // ========== ЗВУКИ ==========
         let soundEnabled = localStorage.getItem('raceSound') === 'on';
         let audioCtx = null;
         let engineOsc = null;
@@ -455,16 +456,15 @@
         });
         function updateSoundBtn() {
             if (soundEnabled) {
-                soundBtn.textContent = '🔊 Звук вкл';
+                soundBtn.textContent = '🔊 Звук';
                 soundBtn.classList.add('on');
             } else {
-                soundBtn.textContent = '🔇 Звук выкл';
+                soundBtn.textContent = '🔇 Звук';
                 soundBtn.classList.remove('on');
             }
         }
         updateSoundBtn();
 
-        // ========== ИГРА ==========
         const canvas = document.getElementById('game');
         const ctx = canvas.getContext('2d');
         const W = canvas.width;
@@ -520,7 +520,6 @@
             coinTimer = 60;
             scoreEl.textContent = 0;
 
-            // Бонусы
             shieldActive = activeBonuses.shield;
             slowActive = activeBonuses.slow;
             slowTimer = slowActive ? 600 : 0;
@@ -552,7 +551,6 @@
             renderShop();
         }
 
-        // ========== МАГАЗИН ==========
         function renderShop() {
             const carsList = document.getElementById('carsList');
             carsList.innerHTML = CARS.map(car => {
@@ -560,7 +558,7 @@
                 const equipped = equippedCar === car.id;
                 let btnHtml = '';
                 if (equipped) {
-                    btnHtml = `<button class="buy-btn equip" disabled>✓ Выбрана</button>`;
+                    btnHtml = `<button class="buy-btn equip" disabled>✓</button>`;
                 } else if (owned) {
                     btnHtml = `<button class="buy-btn equip" data-equip="${car.id}">Выбрать</button>`;
                 } else {
@@ -581,7 +579,6 @@
                 `;
             }).join('');
 
-            // Обновляем состояние бонусов
             document.querySelectorAll('.bonus-item').forEach(el => {
                 const bonus = el.dataset.bonus;
                 if (activeBonuses[bonus]) {
@@ -592,7 +589,6 @@
             });
         }
 
-        // Клик по кнопкам в магазине
         document.getElementById('carsList').addEventListener('click', (e) => {
             const buyId = e.target.dataset.buy;
             const equipId = e.target.dataset.equip;
@@ -618,14 +614,12 @@
             }
         });
 
-        // Клик по бонусам
         document.querySelectorAll('.bonus-item').forEach(el => {
             el.addEventListener('click', () => {
                 const bonus = el.dataset.bonus;
                 const price = BONUS_PRICES[bonus];
 
                 if (activeBonuses[bonus]) {
-                    // Отмена покупки — возвращаем монеты
                     wallet += price;
                     activeBonuses[bonus] = false;
                     savePlayer();
@@ -648,7 +642,6 @@
         document.getElementById('openShopBtn').addEventListener('click', showShop);
         document.getElementById('closeShopBtn').addEventListener('click', showMainMenu);
 
-        // ========== ИГРОВАЯ ЛОГИКА ==========
         function spawnEnemy() {
             const x = roadLeft + Math.random() * (roadRight - roadLeft - enemyW);
             const colors = ['#e94560', '#f9a826', '#9b59b6', '#3498db', '#e67e22'];
@@ -712,7 +705,6 @@
             roundRect(x, y, w, h, 10);
             ctx.fill();
 
-            // Щит (если активен)
             if (isPlayer && shieldActive) {
                 const shieldGrad = ctx.createRadialGradient(x + w/2, y + h/2, 0, x + w/2, y + h/2, w);
                 shieldGrad.addColorStop(0, 'rgba(78, 204, 255, 0.05)');
@@ -794,12 +786,9 @@
 
             roadOffset = (roadOffset + speed) % 60;
 
-            // Замедление времени
             if (slowActive) {
                 slowTimer -= 1;
-                if (slowTimer <= 0) {
-                    slowActive = false;
-                }
+                if (slowTimer <= 0) slowActive = false;
             }
 
             const enemySpeedFactor = slowActive ? 0.4 : 1;
@@ -816,7 +805,6 @@
                 coinTimer = 120 + Math.random() * 120;
             }
 
-            // Враги
             for (let i = enemies.length - 1; i >= 0; i--) {
                 enemies[i].y += (speed + enemies[i].speed) * enemySpeedFactor;
 
@@ -827,7 +815,6 @@
                     player.y + playerH > enemies[i].y
                 ) {
                     if (shieldActive) {
-                        // Щит спасает — уничтожаем врага
                         enemies.splice(i, 1);
                         shieldActive = false;
                         playTone(200, 0.3, 'sawtooth', 0.15, 0);
@@ -850,7 +837,6 @@
                 }
             }
 
-            // Монетки
             for (let i = coins.length - 1; i >= 0; i--) {
                 coins[i].y += speed;
                 coins[i].phase += 0.15;
