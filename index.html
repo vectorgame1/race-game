@@ -6,71 +6,74 @@
     <title>Гонки 🏎️</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-                html, body {
+        html, body {
             background: #1a1a2e;
             display: flex;
             justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            height: 100%;
+            align-items: stretch;
+            height: 100vh;
+            width: 100vw;
             font-family: -apple-system, 'Segoe UI', sans-serif;
             padding: 0;
             margin: 0;
             overflow: hidden;
             position: fixed;
-            width: 100%;
             top: 0;
             left: 0;
             touch-action: none;
         }
-               .game-wrap {
+        .game-wrap {
             background: #16213e;
             padding: 6px;
             border-radius: 14px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.5);
             position: relative;
             width: 100%;
-            max-width: 420px;
+            max-width: 500px;
+            height: 100vh;
             max-height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
-                .hud {
+        .hud {
             display: flex;
             justify-content: space-between;
             color: white;
             margin-bottom: 4px;
             font-size: 11px;
             gap: 3px;
+            flex-shrink: 0;
         }
         .hud span { font-weight: bold; color: #4ecca3; }
         .hud .level-tag { color: #f9a826; }
         .hud .wallet-tag { color: #ffd700; }
-               canvas {
+        canvas {
             background: #2d2d44;
             border-radius: 10px;
             display: block;
             touch-action: none;
             width: 100%;
-            height: auto;
-            max-height: calc(100vh - 200px);
+            height: 100%;
+            flex: 1;
+            min-height: 0;
             object-fit: contain;
-        }
         }
         .controls {
             display: flex;
             justify-content: space-between;
-            margin-top: 6px;
-            gap: 6px;
+            margin-top: 4px;
+            gap: 5px;
+            flex-shrink: 0;
         }
         .btn {
             flex: 1;
-            padding: 10px;
+            padding: 9px;
             background: #4ecca3;
             color: #1a1a2e;
             border: none;
             border-radius: 8px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: bold;
             cursor: pointer;
             user-select: none;
@@ -81,16 +84,17 @@
         .abilities {
             display: flex;
             gap: 4px;
-            margin-top: 6px;
+            margin-top: 4px;
+            flex-shrink: 0;
         }
         .ability-btn {
             flex: 1;
-            padding: 6px 2px;
+            padding: 5px 2px;
             background: #2d2d44;
             color: white;
             border: 2px solid #444;
             border-radius: 8px;
-            font-size: 10px;
+            font-size: 9px;
             font-weight: bold;
             cursor: pointer;
             user-select: none;
@@ -100,7 +104,7 @@
             align-items: center;
             gap: 1px;
         }
-        .ability-btn .icon { font-size: 15px; }
+        .ability-btn .icon { font-size: 13px; }
         .ability-btn .key {
             font-size: 8px;
             color: #888;
@@ -112,33 +116,29 @@
             border-color: #4ecca3;
             background: #3a3a55;
         }
-        .ability-btn:active:not(:disabled) {
-            transform: scale(0.95);
-        }
-        .ability-btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
+        .ability-btn:active:not(:disabled) { transform: scale(0.95); }
+        .ability-btn:disabled { opacity: 0.4; cursor: not-allowed; }
         .ability-btn.active {
             border-color: #ffd700;
             background: rgba(255, 215, 0, 0.2);
         }
-               .hint {
+        .hint {
             color: #888;
             text-align: center;
             margin-top: 2px;
             font-size: 9px;
+            flex-shrink: 0;
         }
         .sound-btn {
             position: absolute;
-            top: 10px;
-            right: 10px;
+            top: 8px;
+            right: 8px;
             background: rgba(255,255,255,0.1);
             color: white;
             border: 2px solid rgba(255,255,255,0.2);
             border-radius: 8px;
-            padding: 5px 9px;
-            font-size: 12px;
+            padding: 4px 8px;
+            font-size: 11px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.2s;
@@ -246,18 +246,9 @@
             flex: 1;
             min-width: 0;
         }
-        .shop-item .car-emoji {
-            font-size: 26px;
-            flex-shrink: 0;
-        }
-        .shop-item .name {
-            font-weight: bold;
-            font-size: 13px;
-        }
-        .shop-item .desc {
-            font-size: 10px;
-            color: #aaa;
-        }
+        .shop-item .car-emoji { font-size: 26px; flex-shrink: 0; }
+        .shop-item .name { font-weight: bold; font-size: 13px; }
+        .shop-item .desc { font-size: 10px; color: #aaa; }
         .shop-item .buy-btn {
             padding: 6px 10px;
             border: none;
@@ -296,9 +287,7 @@
             border: 2px solid transparent;
             transition: all 0.2s;
         }
-        .bonus-item:hover {
-            background: rgba(255,255,255,0.15);
-        }
+        .bonus-item:hover { background: rgba(255,255,255,0.15); }
         .bonus-item.active {
             border-color: #4ecca3;
             background: rgba(78, 204, 163, 0.2);
@@ -404,7 +393,6 @@
             </button>
         </div>
 
-        <!-- Кнопки после аварии -->
         <div class="screen hidden" id="gameOverScreen">
             <h2>💥 АВАРИЯ!</h2>
             <div class="wallet" id="gameOverStats"></div>
@@ -418,8 +406,7 @@
             </button>
         </div>
     </div>
-
-    <script>
+        <script>
         // ========== КАРТЫ ==========
         const MAPS = [
             { id: 'city',   name: 'Город',   icon: '🌆', roadColor: '#3a3a55', roadEdge: '#e94560', lineColor: '#ffeb3b', bgColor: '#2d2d44', decorColor: '#4a4a66' },
@@ -696,7 +683,7 @@
             mainMenuEl.classList.remove('hidden');
             shopMenuEl.classList.add('hidden');
         });
-                // ========== УПРАВЛЕНИЕ ИГРОЙ ==========
+                    // ========== УПРАВЛЕНИЕ ИГРОЙ ==========
         function startGame(levelKey) {
             initAudio();
             if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
@@ -755,6 +742,7 @@
             stopEngine();
             mainMenuEl.classList.remove('hidden');
             shopMenuEl.classList.add('hidden');
+            gameOverScreenEl.classList.add('hidden');
             levelNameEl.textContent = '—';
             ctx.fillStyle = '#2d2d44';
             ctx.fillRect(0, 0, W, H);
@@ -1173,35 +1161,7 @@
         renderMaps();
         showMainMenu();
         loop();
-        </script>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script>
-        if (window.Telegram && window.Telegram.WebApp) {
-            window.Telegram.WebApp.expand();
-            window.Telegram.WebApp.ready();
-        }
     </script>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script>
-        if (window.Telegram && window.Telegram.WebApp) {
-            window.Telegram.WebApp.expand();
-            window.Telegram.WebApp.ready();
-        }
-        </script>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script>
-        if (window.Telegram && window.Telegram.WebApp) {
-            window.Telegram.WebApp.expand();
-            window.Telegram.WebApp.ready();
-        }
-        </script>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script>
-        if (window.Telegram && window.Telegram.WebApp) {
-            window.Telegram.WebApp.expand();
-            window.Telegram.WebApp.ready();
-        }
-     </script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
         if (window.Telegram && window.Telegram.WebApp) {
