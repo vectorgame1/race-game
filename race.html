@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Гонки 🏎️</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #1a1a2e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: -apple-system, 'Segoe UI', sans-serif;
+            padding: 20px;
+        }
+        .game-wrap {
+            background: #16213e;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            position: relative;
+        }
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            color: white;
+            margin-bottom: 12px;
+            font-size: 15px;
+            gap: 8px;
+        }
+        .hud span { font-weight: bold; color: #4ecca3; }
+        .hud .level-tag { color: #f9a826; }
+        canvas {
+            background: #2d2d44;
+            border-radius: 12px;
+            display: block;
+            touch-action: none;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 12px;
+            gap: 10px;
+        }
+        .btn {
+            flex: 1;
+            padding: 14px;
+            background: #4ecca3;
+            color: #1a1a2e;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s;
+        }
+        .btn:hover { background: #3db892; }
+        .btn:active { transform: scale(0.97); }
+        .hint {
+            color: #888;
+            text-align: center;
+            margin-top: 10px;
+            font-size: 13px;
+        }
+
+        /* Меню выбора уровня */
+        .menu {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(22, 33, 62, 0.97);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            z-index: 10;
+        }
+        .menu.hidden { display: none; }
+        .menu h2 {
+            color: white;
+            margin-bottom: 24px;
+            font-size: 26px;
+        }
+        .level-btn {
+            width: 100%;
+            max-width: 280px;
+            padding: 18px;
+            margin-bottom: 12px;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .level-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+        .level-btn.easy   { background: #4ecca3; }
+        .level-btn.medium { background: #f9a826; }
+        .level-btn.hard   { background: #e94560; }
+        .level-btn small { font-weight: normal; font-size: 13px; opacity: 0.9; }
+    </style>
+</head>
+<body>
+    <div class="game-wrap">
+        <div class="hud">
+            <div>Очки: <span id="score">0</span></div>
+            <div>Уровень: <span class="level-tag" id="levelName">—</span></div>
+            <div>Рекорд: <span id="best">0</span></div>
+        </div>
+        <canvas id="game" width="360" height="540"></canvas>
+        <div class="controls">
+            <button class="btn" id="leftBtn">◀ Влево</button>
+            <button class="btn" id="rightBtn">Вправо ▶</button>
+        </div>
+        <div class="hint">Управление: ← → или A / D, либо кнопки ниже</div>
+
+        <!-- Меню выбора уровня -->
+        <div class="menu" id="menu">
+            <h2>🏁 Выбери уровень</h2>
+            <button class="level-btn easy" data-level="easy">
+                <span>🟢 Лёгкий</span>
+                <small>медленно</small>
+            </button>
+            <button class="level-btn medium" data-level="medium">
+                <span>🟡 Средний</span>
+                <small>как раньше</small>
+            </button>
+            <button class="level-btn hard" data-level="hard">
+                <span>🔴 Сложный</span>
+                <small>хардкор</small>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('game');
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width;
+        const H = canvas.height;
+
+        const scoreEl = document.getElementById('score');
+        const bestEl = document.getElementById('best');
+        const levelNameEl = document.getElementById('levelName');
+        const menuEl = document.getElementById('menu');
+
+        let best = parseInt(localStorage.getItem('raceBest') || '0');
+        bestEl.textContent = best;
+
+        // Настройки уровней
+        const LEVELS = {
+            easy: {
+                name: 'Лёгкий',
+                startSpeed: 1.5,
+                speedRamp: 0.0005,
+                spawnRate: 130,
+                roadMargin: 30,
+                enemySpeedMin: 0.5,
+                enemySpeedMax: 1.2
+            },
+            medium: {
+                name: 'Средний',
+                startSpeed: 2,
+                speedRamp: 0.001,
+                spawnRate: 90,
+                roadMargin: 40,
+                enemySpeedMin: 1,
+                enemySpeedMax: 2.5
+            },
+            hard: {
+                name: 'Сложный',
+                startSpeed: 3,
+                speedRamp: 0.002,
+                spawnRate: 55,
+                roadMargin: 55,
+                enemySpeedMin: 1.5,
+                enemySpeedMax: 3.5
+            }
+        };
+
+        let currentLevel = null;
+        let player, enemies, score, speed, gameOver, keys, roadOffset, spawnTimer;
+        let roadLeft, roadRight;
+
+        const playerW = 44;
+        const playerH = 78;
+        const enemyW = 44;
+        const enemyH = 78;
+
+        function startGame(levelKey) {
+            currentLevel = LEVELS[levelKey];
+            levelNameEl.textContent = currentLevel.name;
+
+            roadLeft = currentLevel.roadMargin;
+            roadRight = W - currentLevel.roadMargin;
+
+            player = { x: W / 2 - playerW / 2, y: H - playerH - 20 };
+            enemies = [];
+            score = 0;
+            speed = currentLevel.startSpeed;
+            gameOver = false;
+            keys = { left: false, right: false };
+            roadOffset = 0;
+            spawnTimer = 0;
+            scoreEl.textContent = 0;
+
+            menuEl.classList.add('hidden');
+        }
+
+        function showMenu() {
+            menuEl.classList.remove('hidden');
+            levelNameEl.textContent = '—';
+            // Очистим канвас
+            ctx.fillStyle = '#2d2d44';
+            ctx.fillRect(0, 0, W, H);
+        }
+
+        function spawnEnemy() {
+            const x = roadLeft + Math.random() * (roadRight - roadLeft - enemyW);
+            const colors = ['#e94560', '#f9a826', '#9b59b6', '#3498db', '#e67e22'];
+            enemies.push({
+                x: x,
+                y: -enemyH,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                speed: currentLevel.enemySpeedMin +
+                       Math.random() * (currentLevel.enemySpeedMax - currentLevel.enemySpeedMin)
+            });
+        }
+
+        function drawCar(x, y, w, h, color, isPlayer) {
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.fillRect(x + 3, y + 4, w, h);
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, w, h);
+            ctx.fillStyle = 'rgba(255,255,255,0.25)';
+            ctx.fillRect(x + 6, y + 12, w - 12, h - 24);
+            ctx.fillStyle = 'rgba(150,220,255,0.7)';
+            ctx.fillRect(x + 8, y + 6, w - 16, 14);
+            ctx.fillRect(x + 8, y + h - 20, w - 16, 14);
+            ctx.fillStyle = isPlayer ? '#ffeb3b' : '#ff5252';
+            ctx.fillRect(x + 4, isPlayer ? y + 2 : y + h - 5, 8, 4);
+            ctx.fillRect(x + w - 12, isPlayer ? y + 2 : y + h - 5, 8, 4);
+        }
+
+        function update() {
+            if (gameOver || !currentLevel) return;
+
+            const playerSpeed = 5;
+            if (keys.left && player.x > roadLeft) player.x -= playerSpeed;
+            if (keys.right && player.x < roadRight - playerW) player.x += playerSpeed;
+
+            roadOffset = (roadOffset + speed) % 60;
+
+            spawnTimer += speed;
+            if (spawnTimer > currentLevel.spawnRate) {
+                spawnEnemy();
+                spawnTimer = 0;
+            }
+
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                enemies[i].y += speed + enemies[i].speed;
+
+                if (
+                    player.x < enemies[i].x + enemyW &&
+                    player.x + playerW > enemies[i].x &&
+                    player.y < enemies[i].y + enemyH &&
+                    player.y + playerH > enemies[i].y
+                ) {
+                    gameOver = true;
+                    if (score > best) {
+                        best = Math.floor(score);
+                        localStorage.setItem('raceBest', best);
+                        bestEl.textContent = best;
+                    }
+                }
+
+                if (enemies[i].y > H) {
+                    enemies.splice(i, 1);
+                    score += 10;
+                    scoreEl.textContent = Math.floor(score);
+                }
+            }
+
+            speed += currentLevel.speedRamp;
+            score += speed * 0.05;
+            scoreEl.textContent = Math.floor(score);
+        }
+
+        function draw() {
+            if (!currentLevel) return;
+
+            ctx.fillStyle = '#2d2d44';
+            ctx.fillRect(0, 0, W, H);
+
+            ctx.fillStyle = '#3a3a55';
+            ctx.fillRect(0, 0, roadLeft, H);
+            ctx.fillRect(roadRight, 0, W - roadRight, H);
+
+            ctx.fillStyle = '#ffeb3b';
+            for (let y = -60 + roadOffset; y < H; y += 60) {
+                ctx.fillRect(W / 2 - 3, y, 6, 30);
+            }
+
+            ctx.fillStyle = '#e94560';
+            ctx.fillRect(roadLeft - 3, 0, 3, H);
+            ctx.fillRect(roadRight, 0, 3, H);
+
+            enemies.forEach(e => drawCar(e.x, e.y, enemyW, enemyH, e.color, false));
+            drawCar(player.x, player.y, playerW, playerH, '#4ecca3', true);
+
+            if (gameOver) {
+                ctx.fillStyle = 'rgba(0,0,0,0.75)';
+                ctx.fillRect(0, 0, W, H);
+
+                ctx.fillStyle = '#e94560';
+                ctx.font = 'bold 42px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('АВАРИЯ!', W / 2, H / 2 - 60);
+
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 26px sans-serif';
+                ctx.fillText('Очки: ' + Math.floor(score), W / 2, H / 2 - 10);
+
+                ctx.font = '16px sans-serif';
+                ctx.fillStyle = '#4ecca3';
+                ctx.fillText('Уровень: ' + currentLevel.name, W / 2, H / 2 + 25);
+
+                ctx.fillStyle = '#aaa';
+                ctx.fillText('ПРОБЕЛ — заново', W / 2, H / 2 + 65);
+                ctx.fillText('M — выбрать уровень', W / 2, H / 2 + 90);
+            }
+        }
+
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys && (keys.left = true);
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys && (keys.right = true);
+            if (e.key === ' ' && gameOver && currentLevel) {
+                startGame(Object.keys(LEVELS).find(k => LEVELS[k] === currentLevel));
+            }
+            if ((e.key === 'm' || e.key === 'M') && gameOver) {
+                showMenu();
+            }
+        });
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys && (keys.left = false);
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys && (keys.right = false);
+        });
+
+        const leftBtn = document.getElementById('leftBtn');
+        const rightBtn = document.getElementById('rightBtn');
+
+        function bindBtn(btn, dir) {
+            btn.addEventListener('touchstart', (e) => { e.preventDefault(); if (keys) keys[dir] = true; });
+            btn.addEventListener('touchend', (e) => { e.preventDefault(); if (keys) keys[dir] = false; });
+            btn.addEventListener('mousedown', () => keys && (keys[dir] = true));
+            btn.addEventListener('mouseup', () => keys && (keys[dir] = false));
+            btn.addEventListener('mouseleave', () => keys && (keys[dir] = false));
+        }
+        bindBtn(leftBtn, 'left');
+        bindBtn(rightBtn, 'right');
+
+        // Клик по кнопкам уровней
+        document.querySelectorAll('.level-btn').forEach(btn => {
+            btn.addEventListener('click', () => startGame(btn.dataset.level));
+        });
+
+        // Первый запуск — показываем меню
+        showMenu();
+        loop();
+    </script>
+</body>
+</html>
