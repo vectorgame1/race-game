@@ -1398,13 +1398,13 @@
         });
 
         // ========== СПАВН (с 3D-координатами) ==========
-        function spawnEnemy() {
-            const x = 30 + Math.random() * (W - 60);
+              function spawnEnemy() {
+            const x = 60 + Math.random() * (W - 120);
             const colors = ['#e94560', '#f9a826', '#9b59b6', '#3498db', '#e67e22'];
             const types = ['car', 'car', 'car', 'truck', 'moto'];
             enemies.push({
                 x: x,
-                y: 0,           // Y на дороге (глубина)
+                y: 0,
                 color: colors[Math.floor(Math.random() * colors.length)],
                 speed: currentLevel.enemySpeedMin + Math.random() * (currentLevel.enemySpeedMax - currentLevel.enemySpeedMin),
                 type: types[Math.floor(Math.random() * types.length)]
@@ -1412,7 +1412,7 @@
         }
 
         function spawnCoin() {
-            const x = 30 + Math.random() * (W - 60);
+            const x = 60 + Math.random() * (W - 120);
             coins.push({ x: x, y: 0, phase: Math.random() * Math.PI * 2 });
         }
 
@@ -1692,7 +1692,7 @@
         }
 
         // ========== ОТРИСОВКА МАШИНЫ 3D ==========
-        function drawCar3D(worldX, depthY, color, isPlayer, carType) {
+               function drawCar3D(worldX, depthY, color, isPlayer, carType) {
             if (depthY < 0 || depthY > 1.05) return;
 
             const screenX = projectX(worldX, depthY);
@@ -1702,74 +1702,86 @@
             const w = playerW * scale;
             const h = playerH * scale;
 
-            // Пропускаем, если слишком далеко/маленький
-            if (w < 4) return;
+            if (w < 5) return;
 
-            // Тень
-            ctx.fillStyle = 'rgba(0,0,0,0.35)';
-            roundRect(screenX - w / 2 + 3, screenY - h + 4, w, h, 6 * scale);
+            // 🌑 Тень
+            ctx.fillStyle = 'rgba(0,0,0,0.4)';
+            ctx.beginPath();
+            ctx.ellipse(screenX, screenY + 2, w * 0.6, h * 0.15, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            // Колёса
-            ctx.fillStyle = '#1a1a1a';
-            const wheelW = 5 * scale, wheelH = 12 * scale;
-            roundRect(screenX - w / 2 - wheelW / 2, screenY - h + h * 0.2, wheelW, wheelH, 2 * scale); ctx.fill();
-            roundRect(screenX + w / 2 - wheelW / 2, screenY - h + h * 0.2, wheelW, wheelH, 2 * scale); ctx.fill();
-            roundRect(screenX - w / 2 - wheelW / 2, screenY - h * 0.35, wheelW, wheelH, 2 * scale); ctx.fill();
-            roundRect(screenX + w / 2 - wheelW / 2, screenY - h * 0.35, wheelW, wheelH, 2 * scale); ctx.fill();
+            // 🔘 Колёса
+            ctx.fillStyle = '#0a0a0a';
+            const wheelW = 6 * scale, wheelH = 14 * scale;
+            roundRect(screenX - w / 2 - wheelW / 2, screenY - h * 0.85, wheelW, wheelH, 2 * scale); ctx.fill();
+            roundRect(screenX + w / 2 - wheelW / 2, screenY - h * 0.85, wheelW, wheelH, 2 * scale); ctx.fill();
+            roundRect(screenX - w / 2 - wheelW / 2, screenY - h * 0.3, wheelW, wheelH, 2 * scale); ctx.fill();
+            roundRect(screenX + w / 2 - wheelW / 2, screenY - h * 0.3, wheelW, wheelH, 2 * scale); ctx.fill();
 
-            // Корпус
-            const grad = ctx.createLinearGradient(screenX - w / 2, 0, screenX + w / 2, 0);
-            grad.addColorStop(0, shadeColor(color, -30));
-            grad.addColorStop(0.5, color);
-            grad.addColorStop(1, shadeColor(color, -30));
+            // 🚗 Корпус
+            const grad = ctx.createLinearGradient(screenX - w / 2, screenY - h, screenX + w / 2, screenY);
+            grad.addColorStop(0, shadeColor(color, -40));
+            grad.addColorStop(0.3, color);
+            grad.addColorStop(0.7, shadeColor(color, 15));
+            grad.addColorStop(1, shadeColor(color, -40));
             ctx.fillStyle = grad;
-            roundRect(screenX - w / 2, screenY - h, w, h, 6 * scale);
+            roundRect(screenX - w / 2, screenY - h, w, h, 8 * scale);
             ctx.fill();
 
-            // Заднее стекло
-            ctx.fillStyle = 'rgba(120,200,255,0.6)';
-            roundRect(screenX - w / 2 + 3 * scale, screenY - h + 4 * scale, w - 6 * scale, h * 0.25, 3 * scale);
+            // 🌟 Блик
+            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            roundRect(screenX - w / 2 + 3 * scale, screenY - h + 3 * scale, w - 6 * scale, h * 0.15, 4 * scale);
             ctx.fill();
 
-            // Фары задние (у игрока — красные, у врагов — видны)
+            // 🪟 Заднее стекло
+            const glassGrad = ctx.createLinearGradient(0, screenY - h, 0, screenY - h * 0.6);
+            glassGrad.addColorStop(0, 'rgba(150,220,255,0.9)');
+            glassGrad.addColorStop(1, 'rgba(80,150,200,0.7)');
+            ctx.fillStyle = glassGrad;
+            roundRect(screenX - w / 2 + 4 * scale, screenY - h + 5 * scale, w - 8 * scale, h * 0.25, 4 * scale);
+            ctx.fill();
+
+            // 🔴 Фары
             if (isPlayer) {
                 ctx.fillStyle = '#ff1744';
-                roundRect(screenX - w / 2 + 2 * scale, screenY - 6 * scale, 8 * scale, 4 * scale, 1 * scale); ctx.fill();
-                roundRect(screenX + w / 2 - 10 * scale, screenY - 6 * scale, 8 * scale, 4 * scale, 1 * scale); ctx.fill();
+                roundRect(screenX - w / 2 + 2 * scale, screenY - 8 * scale, 10 * scale, 5 * scale, 2 * scale); ctx.fill();
+                roundRect(screenX + w / 2 - 12 * scale, screenY - 8 * scale, 10 * scale, 5 * scale, 2 * scale); ctx.fill();
 
-                // Свечение
-                const glow = ctx.createRadialGradient(screenX - w / 2 + 6 * scale, screenY - 4 * scale, 0, screenX - w / 2 + 6 * scale, screenY - 4 * scale, 20 * scale);
-                glow.addColorStop(0, 'rgba(255, 23, 68, 0.4)');
+                const glow = ctx.createRadialGradient(screenX - w / 2 + 7 * scale, screenY - 6 * scale, 0, screenX - w / 2 + 7 * scale, screenY - 6 * scale, 25 * scale);
+                glow.addColorStop(0, 'rgba(255, 23, 68, 0.5)');
                 glow.addColorStop(1, 'rgba(255, 23, 68, 0)');
                 ctx.fillStyle = glow;
-                ctx.fillRect(screenX - w / 2 - 20 * scale, screenY - 20 * scale, 40 * scale, 40 * scale);
+                ctx.fillRect(screenX - w / 2 - 25 * scale, screenY - 30 * scale, 50 * scale, 50 * scale);
 
-                const glow2 = ctx.createRadialGradient(screenX + w / 2 - 6 * scale, screenY - 4 * scale, 0, screenX + w / 2 - 6 * scale, screenY - 4 * scale, 20 * scale);
-                glow2.addColorStop(0, 'rgba(255, 23, 68, 0.4)');
+                const glow2 = ctx.createRadialGradient(screenX + w / 2 - 7 * scale, screenY - 6 * scale, 0, screenX + w / 2 - 7 * scale, screenY - 6 * scale, 25 * scale);
+                glow2.addColorStop(0, 'rgba(255, 23, 68, 0.5)');
                 glow2.addColorStop(1, 'rgba(255, 23, 68, 0)');
                 ctx.fillStyle = glow2;
-                ctx.fillRect(screenX + w / 2 - 20 * scale, screenY - 20 * scale, 40 * scale, 40 * scale);
+                ctx.fillRect(screenX + w / 2 - 25 * scale, screenY - 30 * scale, 50 * scale, 50 * scale);
 
-                // Полицейская мигалка
                 if (carPerk === 'Сирена') {
                     const flash = Math.floor(Date.now() / 200) % 2;
                     ctx.fillStyle = flash === 0 ? '#ff1744' : '#2979ff';
-                    roundRect(screenX - 6 * scale, screenY - h - 4 * scale, 12 * scale, 4 * scale, 2 * scale);
+                    roundRect(screenX - 8 * scale, screenY - h - 5 * scale, 16 * scale, 5 * scale, 3 * scale);
                     ctx.fill();
+
+                    const flashGlow = ctx.createRadialGradient(screenX, screenY - h - 3 * scale, 0, screenX, screenY - h - 3 * scale, 30 * scale);
+                    flashGlow.addColorStop(0, flash === 0 ? 'rgba(255, 23, 68, 0.6)' : 'rgba(41, 121, 255, 0.6)');
+                    flashGlow.addColorStop(1, 'rgba(0,0,0,0)');
+                    ctx.fillStyle = flashGlow;
+                    ctx.fillRect(screenX - 30 * scale, screenY - h - 30 * scale, 60 * scale, 60 * scale);
                 }
             } else {
-                // У врагов — фары спереди (видны как маленькие точки)
-                ctx.fillStyle = '#ff5252';
-                roundRect(screenX - w / 2 + 2 * scale, screenY - h + 2 * scale, 5 * scale, 3 * scale, 1 * scale); ctx.fill();
-                roundRect(screenX + w / 2 - 7 * scale, screenY - h + 2 * scale, 5 * scale, 3 * scale, 1 * scale); ctx.fill();
+                ctx.fillStyle = 'rgba(255, 200, 100, 0.9)';
+                roundRect(screenX - w / 2 + 3 * scale, screenY - h + 3 * scale, 6 * scale, 4 * scale, 2 * scale); ctx.fill();
+                roundRect(screenX + w / 2 - 9 * scale, screenY - h + 3 * scale, 6 * scale, 4 * scale, 2 * scale); ctx.fill();
             }
 
-            // Щит
+            // 🛡️ Щит
             if (isPlayer && shieldActive) {
                 const shieldGrad = ctx.createRadialGradient(screenX, screenY - h / 2, 0, screenX, screenY - h / 2, w);
                 shieldGrad.addColorStop(0, 'rgba(78, 204, 255, 0.05)');
-                shieldGrad.addColorStop(0.7, 'rgba(78, 204, 255, 0.25)');
+                shieldGrad.addColorStop(0.7, 'rgba(78, 204, 255, 0.3)');
                 shieldGrad.addColorStop(1, 'rgba(78, 204, 255, 0)');
                 ctx.fillStyle = shieldGrad;
                 ctx.beginPath();
@@ -1899,24 +1911,44 @@
 
         // ========== ОТРИСОВКА ДОРОГИ ==========
         function drawRoad3D() {
-            // Небо
+                   function drawRoad3D() {
+            // 🌌 НЕБО с градиентом
             const skyGrad = ctx.createLinearGradient(0, 0, 0, HORIZON_Y);
             skyGrad.addColorStop(0, currentMap.skyTop);
             skyGrad.addColorStop(1, currentMap.skyBot);
             ctx.fillStyle = skyGrad;
             ctx.fillRect(0, 0, W, HORIZON_Y);
 
-            // Земля (обочины)
+            // ⭐ Звёзды (для ночной карты)
+            if (currentMap.id === 'night') {
+                ctx.fillStyle = 'rgba(255,255,255,0.8)';
+                for (let i = 0; i < 40; i++) {
+                    const sx = (i * 53) % W;
+                    const sy = (i * 31) % (HORIZON_Y - 20);
+                    const size = (i % 3) + 1;
+                    ctx.fillRect(sx, sy, size, size);
+                }
+            }
+
+            // 🌅 Горизонт (тонкая полоса)
+            ctx.fillStyle = currentMap.decorColor;
+            ctx.fillRect(0, HORIZON_Y - 2, W, 4);
+
+            // 🟫 Земля (обочины)
             ctx.fillStyle = currentMap.decorColor;
             ctx.fillRect(0, HORIZON_Y, W, H - HORIZON_Y);
 
-            // Дорога (трапеция)
+            // 🛣️ ДОРОГА (трапеция)
             const roadTopLeft = W / 2 - ROAD_TOP_W / 2;
             const roadTopRight = W / 2 + ROAD_TOP_W / 2;
             const roadBotLeft = W / 2 - ROAD_BOT_W / 2;
             const roadBotRight = W / 2 + ROAD_BOT_W / 2;
 
-            ctx.fillStyle = currentMap.roadColor;
+            // Асфальт с градиентом (темнее у горизонта)
+            const roadGrad = ctx.createLinearGradient(0, HORIZON_Y, 0, H);
+            roadGrad.addColorStop(0, shadeColor(currentMap.roadColor, -20));
+            roadGrad.addColorStop(1, currentMap.roadColor);
+            ctx.fillStyle = roadGrad;
             ctx.beginPath();
             ctx.moveTo(roadTopLeft, HORIZON_Y);
             ctx.lineTo(roadTopRight, HORIZON_Y);
@@ -1925,7 +1957,7 @@
             ctx.closePath();
             ctx.fill();
 
-            // Края дороги
+            // 🚧 Края дороги (белые линии)
             ctx.strokeStyle = currentMap.roadEdge;
             ctx.lineWidth = 3;
             ctx.beginPath();
@@ -1937,61 +1969,90 @@
             ctx.lineTo(roadBotRight, H);
             ctx.stroke();
 
-            // Разметка (полосы, уходящие вдаль)
+            // 🟡 ПУНКТИРНАЯ РАЗМЕТКА (полосы уходят вдаль)
             ctx.fillStyle = currentMap.lineColor;
-            const stripeCount = 8;
-            for (let i = 0; i < stripeCount; i++) {
-                const baseY = (i * 60 + roadOffset) / (H - HORIZON_Y);
-                for (let s = 0; s < 3; s++) {
-                    const y1 = (baseY + s * 0.3) % 1;
-                    const y2 = Math.min(1, y1 + 0.1);
-                    if (y1 >= 1) continue;
+            const stripes = 12;
+            for (let i = 0; i < stripes; i++) {
+                const offset = (i * 0.15 + roadOffset * 0.003) % 1.2;
+                const y1 = offset;
+                const y2 = offset + 0.06;
+                if (y1 >= 1.2) continue;
 
-                    const sy1 = HORIZON_Y + y1 * (H - HORIZON_Y);
-                    const sy2 = HORIZON_Y + y2 * (H - HORIZON_Y);
-                    const w1 = (ROAD_TOP_W + y1 * (ROAD_BOT_W - ROAD_TOP_W)) * 0.02;
-                    const w2 = (ROAD_TOP_W + y2 * (ROAD_BOT_W - ROAD_TOP_W)) * 0.02;
+                const sy1 = HORIZON_Y + y1 * (H - HORIZON_Y);
+                const sy2 = HORIZON_Y + y2 * (H - HORIZON_Y);
+                if (sy1 < HORIZON_Y || sy1 > H) continue;
+                if (sy2 < HORIZON_Y || sy2 > H) continue;
 
-                    ctx.beginPath();
-                    ctx.moveTo(W / 2 - w1, sy1);
-                    ctx.lineTo(W / 2 + w1, sy1);
-                    ctx.lineTo(W / 2 + w2, sy2);
-                    ctx.lineTo(W / 2 - w2, sy2);
-                    ctx.closePath();
-                    ctx.fill();
-                }
+                const w1 = (ROAD_TOP_W + y1 * (ROAD_BOT_W - ROAD_TOP_W)) * 0.025;
+                const w2 = (ROAD_TOP_W + y2 * (ROAD_BOT_W - ROAD_TOP_W)) * 0.025;
+
+                ctx.beginPath();
+                ctx.moveTo(W / 2 - w1, sy1);
+                ctx.lineTo(W / 2 + w1, sy1);
+                ctx.lineTo(W / 2 + w2, sy2);
+                ctx.lineTo(W / 2 - w2, sy2);
+                ctx.closePath();
+                ctx.fill();
+            }
+
+            // 🌳 ДЕРЕВЬЯ / ЗДАНИЯ по бокам дороги
+            drawRoadsideDecor();
+        }
+
+        // Декор по бокам
+        function drawRoadsideDecor() {
+            const decorCount = 8;
+            for (let i = 0; i < decorCount; i++) {
+                const offset = (i * 0.15 + roadOffset * 0.003) % 1.2;
+                if (offset >= 1.2) continue;
+
+                const sy = HORIZON_Y + offset * (H - HORIZON_Y);
+                const scale = 0.15 + offset * 0.85;
+                const sideOffset = (ROAD_TOP_W + offset * (ROAD_BOT_W - ROAD_TOP_W)) / 2 + 15;
+
+                // Слева
+                const leftX = W / 2 - sideOffset;
+                drawDecorItem(leftX, sy, scale, i);
+
+                // Справа
+                const rightX = W / 2 + sideOffset;
+                drawDecorItem(rightX, sy, scale, i + 1);
             }
         }
 
-        // ========== ПОГОДА ==========
-        function drawWeather() {
-            if (weather === 'rain') {
-                ctx.strokeStyle = 'rgba(150, 200, 255, 0.5)';
-                ctx.lineWidth = 1;
-                for (let i = 0; i < 60; i++) {
-                    const x = (i * 37 + Date.now() * 0.3) % W;
-                    const y = (i * 53 + Date.now() * 0.5) % H;
-                    ctx.beginPath();
-                    ctx.moveTo(x, y);
-                    ctx.lineTo(x - 2, y + 12);
-                    ctx.stroke();
+        function drawDecorItem(x, y, scale, seed) {
+            const size = 30 * scale;
+            if (size < 3) return;
+
+            if (currentMap.id === 'night' || currentMap.id === 'city') {
+                // 🏢 Здания
+                ctx.fillStyle = '#2a2a4a';
+                ctx.fillRect(x - size / 2, y - size * 1.5, size, size * 1.5);
+                ctx.fillStyle = 'rgba(255, 235, 100, 0.7)';
+                for (let w = 0; w < 3; w++) {
+                    for (let h = 0; h < 3; h++) {
+                        if ((seed + w + h) % 2 === 0) {
+                            ctx.fillRect(x - size / 2 + 3 * scale + w * 8 * scale, y - size * 1.5 + 5 * scale + h * 10 * scale, 4 * scale, 5 * scale);
+                        }
+                    }
                 }
-            } else if (weather === 'snow') {
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-                for (let i = 0; i < 40; i++) {
-                    const x = (i * 41 + Math.sin(Date.now() * 0.001 + i) * 25) % W;
-                    const y = (i * 67 + Date.now() * 0.15) % H;
-                    ctx.beginPath();
-                    ctx.arc(x, y, 2, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            } else if (weather === 'fog') {
-                const grad = ctx.createLinearGradient(0, HORIZON_Y - 50, 0, H);
-                grad.addColorStop(0, 'rgba(200, 200, 220, 0.5)');
-                grad.addColorStop(0.5, 'rgba(200, 200, 220, 0.2)');
-                grad.addColorStop(1, 'rgba(200, 200, 220, 0.1)');
-                ctx.fillStyle = grad;
-                ctx.fillRect(0, 0, W, H);
+            } else if (currentMap.id === 'forest' || currentMap.id === 'snow') {
+                // 🌲 Деревья
+                ctx.fillStyle = '#3a2a1a';
+                ctx.fillRect(x - 2 * scale, y - size, 4 * scale, size);
+                ctx.fillStyle = currentMap.id === 'snow' ? '#2a5a2a' : '#1a5a1a';
+                ctx.beginPath();
+                ctx.moveTo(x, y - size * 2);
+                ctx.lineTo(x + size / 2, y - size * 0.5);
+                ctx.lineTo(x - size / 2, y - size * 0.5);
+                ctx.closePath();
+                ctx.fill();
+            } else if (currentMap.id === 'desert') {
+                // 🌵 Кактусы
+                ctx.fillStyle = '#2a6a2a';
+                ctx.fillRect(x - 3 * scale, y - size * 1.5, 6 * scale, size * 1.5);
+                ctx.fillRect(x - 10 * scale, y - size, 7 * scale, 4 * scale);
+                ctx.fillRect(x + 3 * scale, y - size * 1.2, 7 * scale, 4 * scale);
             }
         }
 
