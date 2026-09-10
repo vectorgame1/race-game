@@ -2,2169 +2,341 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Гонки 3D 🏎️</title>
+    <title>Гонки 🏎️</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body {
+        body {
             background: #1a1a2e;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            height: 100%;
-            width: 100%;
             font-family: -apple-system, 'Segoe UI', sans-serif;
-            padding: 4px;
-            margin: 0;
-            overflow: hidden;
-            position: fixed;
-            top: 0; left: 0;
-            touch-action: none;
+            padding: 20px;
         }
         .game-wrap {
             background: #16213e;
-            padding: 8px;
-            border-radius: 14px;
+            padding: 20px;
+            border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.5);
             position: relative;
-            width: 100%;
-            max-width: 480px;
-            min-height: 500px;
-            max-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        body.tg-mode .game-wrap {
-            height: 100vh;
-            max-height: 100vh;
-            min-height: 0;
-        }
-        body.tg-mode canvas {
-            height: 100%;
-            flex: 1;
-            min-height: 0;
-            max-height: none;
         }
         .hud {
             display: flex;
             justify-content: space-between;
             color: white;
-            margin-bottom: 6px;
-            font-size: 11px;
-            gap: 3px;
-            flex-shrink: 0;
+            margin-bottom: 12px;
+            font-size: 15px;
+            gap: 8px;
         }
         .hud span { font-weight: bold; color: #4ecca3; }
         .hud .level-tag { color: #f9a826; }
-        .hud .wallet-tag { color: #ffd700; }
-        .hud .xp-tag { color: #00d2ff; }
         canvas {
             background: #2d2d44;
-            border-radius: 10px;
+            border-radius: 12px;
             display: block;
             touch-action: none;
-            width: 100%;
-            height: auto;
-            max-height: calc(100vh - 250px);
-            object-fit: contain;
         }
         .controls {
             display: flex;
             justify-content: space-between;
-            margin-top: 5px;
-            gap: 5px;
-            flex-shrink: 0;
+            margin-top: 12px;
+            gap: 10px;
         }
         .btn {
             flex: 1;
-            padding: 10px;
+            padding: 14px;
             background: #4ecca3;
             color: #1a1a2e;
             border: none;
-            border-radius: 8px;
-            font-size: 13px;
+            border-radius: 10px;
+            font-size: 16px;
             font-weight: bold;
             cursor: pointer;
             user-select: none;
             transition: background 0.2s;
         }
+        .btn:hover { background: #3db892; }
         .btn:active { transform: scale(0.97); }
-        .abilities {
-            display: flex;
-            gap: 4px;
-            margin-top: 5px;
-            flex-shrink: 0;
-        }
-        .ability-btn {
-            flex: 1;
-            padding: 6px 2px;
-            background: #2d2d44;
-            color: white;
-            border: 2px solid #444;
-            border-radius: 8px;
-            font-size: 9px;
-            font-weight: bold;
-            cursor: pointer;
-            user-select: none;
-            transition: all 0.2s;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1px;
-        }
-        .ability-btn .icon { font-size: 14px; }
-        .ability-btn .key {
-            font-size: 8px;
-            color: #888;
-            background: #1a1a2e;
-            padding: 1px 3px;
-            border-radius: 3px;
-        }
-        .ability-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-        .ability-btn.active {
-            border-color: #ffd700;
-            background: rgba(255, 215, 0, 0.2);
-        }
         .hint {
             color: #888;
             text-align: center;
-            margin-top: 3px;
-            font-size: 9px;
-            flex-shrink: 0;
+            margin-top: 10px;
+            font-size: 13px;
         }
-        .sound-btn {
-            position: absolute;
-            top: 10px; right: 10px;
-            background: rgba(255,255,255,0.1);
-            color: white;
-            border: 2px solid rgba(255,255,255,0.2);
-            border-radius: 8px;
-            padding: 5px 9px;
-            font-size: 11px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-            z-index: 5;
-        }
-        .sound-btn.on { background: #4ecca3; color: #1a1a2e; border-color: #4ecca3; }
-        .screen {
+
+        /* Меню выбора уровня */
+        .menu {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: #16213e;
-            border-radius: 14px;
+            background: rgba(22, 33, 62, 0.97);
+            border-radius: 20px;
             display: flex;
             flex-direction: column;
-            justify-content: flex-start;
-            align-items: center;
-            padding: 14px;
-            z-index: 10;
-            overflow-y: auto;
-        }
-        .screen.hidden { display: none; }
-        .screen h2 {
-            color: white;
-            margin-bottom: 10px;
-            font-size: 19px;
-            text-align: center;
-        }
-        .screen .wallet {
-            color: #ffd700;
-            font-size: 14px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        .screen .player-stats {
-            color: #00d2ff;
-            font-size: 12px;
-            margin-bottom: 10px;
-            text-align: center;
-        }
-        .menu-btn {
-            width: 100%;
-            max-width: 320px;
-            padding: 13px 16px;
-            margin-bottom: 7px;
-            border: none;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.15s;
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .menu-btn:hover { transform: translateY(-2px); }
-        .menu-btn.easy   { background: #4ecca3; }
-        .menu-btn.medium { background: #f9a826; }
-        .menu-btn.hard   { background: #e94560; }
-        .menu-btn.shop   { background: #9b59b6; }
-        .menu-btn.campaign { background: #00d2ff; }
-        .menu-btn.achievements { background: #ffd700; color: #1a1a2e; }
-        .menu-btn.daily { background: #16a085; }
-        .menu-btn.upgrade { background: #e67e22; }
-        .menu-btn.back   { background: #555; }
-        .menu-btn.teleport {
-            background: linear-gradient(135deg, #00d2ff, #3a7bd5);
-        }
-        .menu-btn.teleport.active {
-            background: linear-gradient(135deg, #ffd700, #ff8c00);
-        }
-        .menu-btn small { font-weight: normal; font-size: 11px; opacity: 0.9; }
-        .section-title {
-            color: #f9a826;
-            font-size: 14px;
-            font-weight: bold;
-            margin: 10px 0 6px;
-            align-self: flex-start;
-            max-width: 360px;
-            width: 100%;
-        }
-        .map-row {
-            display: flex;
-            gap: 6px;
-            max-width: 360px;
-            width: 100%;
-            margin-bottom: 6px;
-            flex-wrap: wrap;
             justify-content: center;
+            align-items: center;
+            padding: 30px;
+            z-index: 10;
         }
-        .map-item {
-            width: calc(33.33% - 4px);
-            min-width: 88px;
-            background: rgba(255,255,255,0.08);
-            border-radius: 12px;
-            padding: 12px 6px;
-            text-align: center;
+        .menu.hidden { display: none; }
+        .menu h2 {
             color: white;
-            cursor: pointer;
-            border: 3px solid transparent;
-            transition: all 0.2s;
+            margin-bottom: 24px;
+            font-size: 26px;
         }
-        .map-item.active {
-            border-color: #4ecca3;
-            background: rgba(78, 204, 163, 0.2);
-        }
-        .map-item .icon { font-size: 26px; }
-        .map-item .title { font-size: 11px; font-weight: bold; margin-top: 4px; }
-        .bonus-row {
-            display: flex;
-            gap: 6px;
-            max-width: 360px;
+        .level-btn {
             width: 100%;
-            margin-bottom: 6px;
-        }
-        .bonus-item {
-            flex: 1;
-            background: rgba(255,255,255,0.08);
-            border-radius: 10px;
-            padding: 9px 5px;
-            text-align: center;
-            color: white;
-            cursor: pointer;
-            border: 3px solid transparent;
-            transition: all 0.2s;
-        }
-        .bonus-item.active {
-            border-color: #4ecca3;
-            background: rgba(78, 204, 163, 0.2);
-        }
-        .bonus-item .icon { font-size: 20px; }
-        .bonus-item .title { font-size: 11px; font-weight: bold; margin-top: 3px; }
-        .bonus-item .price { font-size: 10px; color: #ffd700; margin-top: 2px; }
-        .shop-item {
-            width: 100%;
-            max-width: 360px;
-            background: rgba(255,255,255,0.08);
+            max-width: 280px;
+            padding: 18px;
+            margin-bottom: 12px;
+            border: none;
             border-radius: 12px;
-            padding: 11px 13px;
-            margin-bottom: 7px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            color: white;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            color: white;
-            border: 3px solid transparent;
         }
-        .shop-item.owned { border-color: #4ecca3; background: rgba(78, 204, 163, 0.15); }
-        .shop-item.equipped { border-color: #ffd700; background: rgba(255, 215, 0, 0.15); }
-        .shop-item .info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex: 1;
-            min-width: 0;
+        .level-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
         }
-        .shop-item .car-emoji { font-size: 30px; flex-shrink: 0; }
-        .shop-item .name { font-weight: bold; font-size: 14px; }
-        .shop-item .desc { font-size: 10px; color: #aaa; margin-top: 2px; }
-        .shop-item .buy-btn {
-            padding: 9px 12px;
-            border: none;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: bold;
-            cursor: pointer;
-            background: #4ecca3;
-            color: #1a1a2e;
-            flex-shrink: 0;
-        }
-        .shop-item .buy-btn:disabled { background: #444; color: #888; cursor: not-allowed; }
-        .shop-item .buy-btn.equip { background: #ffd700; color: #1a1a2e; }
-        .achievement-item {
-            width: 100%;
-            max-width: 360px;
-            background: rgba(255,255,255,0.08);
-            border-radius: 10px;
-            padding: 10px 12px;
-            margin-bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: white;
-            border: 2px solid transparent;
-        }
-        .achievement-item.unlocked {
-            border-color: #ffd700;
-            background: rgba(255, 215, 0, 0.12);
-        }
-        .achievement-item .ach-icon { font-size: 26px; flex-shrink: 0; }
-        .achievement-item .ach-info { flex: 1; }
-        .achievement-item .ach-name { font-weight: bold; font-size: 13px; }
-        .achievement-item .ach-desc { font-size: 10px; color: #aaa; margin-top: 2px; }
-        .achievement-item .ach-status { font-size: 18px; }
-        .campaign-level {
-            width: 100%;
-            max-width: 360px;
-            background: rgba(255,255,255,0.08);
-            border-radius: 10px;
-            padding: 10px 12px;
-            margin-bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: white;
-            cursor: pointer;
-            border: 2px solid transparent;
-        }
-        .campaign-level.locked { opacity: 0.5; cursor: not-allowed; }
-        .campaign-level.completed { border-color: #4ecca3; background: rgba(78, 204, 163, 0.15); }
-        .campaign-level .cl-num { font-size: 22px; font-weight: bold; color: #00d2ff; flex-shrink: 0; }
-        .campaign-level .cl-info { flex: 1; }
-        .campaign-level .cl-name { font-weight: bold; font-size: 13px; }
-        .campaign-level .cl-task { font-size: 10px; color: #aaa; margin-top: 2px; }
-        .campaign-level .cl-status { font-size: 18px; }
-        .upgrade-item {
-            width: 100%;
-            max-width: 360px;
-            background: rgba(255,255,255,0.08);
-            border-radius: 10px;
-            padding: 10px 12px;
-            margin-bottom: 6px;
-            color: white;
-        }
-        .upgrade-item .up-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 6px;
-        }
-        .upgrade-item .up-name { font-weight: bold; font-size: 13px; }
-        .upgrade-item .up-level { font-size: 12px; color: #ffd700; }
-        .upgrade-item .up-bar {
-            height: 8px;
-            background: #1a1a2e;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        .upgrade-item .up-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #4ecca3, #00d2ff);
-            transition: width 0.3s;
-        }
-        .upgrade-item .up-btn {
-            width: 100%;
-            margin-top: 6px;
-            padding: 8px;
-            background: #4ecca3;
-            color: #1a1a2e;
-            border: none;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .upgrade-item .up-btn:disabled { background: #444; color: #888; cursor: not-allowed; }
+        .level-btn.easy   { background: #4ecca3; }
+        .level-btn.medium { background: #f9a826; }
+        .level-btn.hard   { background: #e94560; }
+        .level-btn small { font-weight: normal; font-size: 13px; opacity: 0.9; }
     </style>
 </head>
 <body>
     <div class="game-wrap">
-        <button class="sound-btn" id="soundBtn">🔇 Звук</button>
         <div class="hud">
             <div>Очки: <span id="score">0</span></div>
-            <div>🪙 <span class="wallet-tag" id="wallet">0</span></div>
-            <div>⭐ <span class="xp-tag" id="xpDisplay">0</span></div>
-            <div>Ур.: <span class="level-tag" id="levelName">—</span></div>
+            <div>Уровень: <span class="level-tag" id="levelName">—</span></div>
+            <div>Рекорд: <span id="best">0</span></div>
         </div>
         <canvas id="game" width="360" height="540"></canvas>
         <div class="controls">
             <button class="btn" id="leftBtn">◀ Влево</button>
             <button class="btn" id="rightBtn">Вправо ▶</button>
         </div>
-        <div class="abilities">
-            <button class="ability-btn" id="abilityBoost" disabled>
-                <span class="icon">⚡</span><span>Ускор.</span><span class="key">У</span>
+        <div class="hint">Управление: ← → или A / D, либо кнопки ниже</div>
+
+        <!-- Меню выбора уровня -->
+        <div class="menu" id="menu">
+            <h2>🏁 Выбери уровень</h2>
+            <button class="level-btn easy" data-level="easy">
+                <span>🟢 Лёгкий</span>
+                <small>медленно</small>
             </button>
-            <button class="ability-btn" id="abilityShield" disabled>
-                <span class="icon">🛡️</span><span>Щит</span><span class="key">Щ</span>
+            <button class="level-btn medium" data-level="medium">
+                <span>🟡 Средний</span>
+                <small>как раньше</small>
             </button>
-            <button class="ability-btn" id="abilityTeleport" disabled>
-                <span class="icon">🌀</span><span>Телеп.</span><span class="key">Т</span>
+            <button class="level-btn hard" data-level="hard">
+                <span>🔴 Сложный</span>
+                <small>хардкор</small>
             </button>
-            <button class="ability-btn" id="abilityPause">
-                <span class="icon">⏸️</span><span>Пауза</span><span class="key">П</span>
-            </button>
-        </div>
-        <div class="hint">← → движение | У Т Щ П — способности</div>
-
-        <div class="screen" id="mainMenu">
-            <h2>🏁 Гонки 3D</h2>
-            <div class="wallet">🪙 Копилка: <span id="walletMenu">0</span></div>
-            <div class="player-stats" id="playerStats"></div>
-            <div class="section-title">🗺️ Карта</div>
-            <div class="map-row" id="mapRow"></div>
-            <div class="section-title">🎯 Быстрая игра</div>
-            <button class="menu-btn easy" data-level="easy"><span>🟢 Лёгкий</span><small>медленно</small></button>
-            <button class="menu-btn medium" data-level="medium"><span>🟡 Средний</span><small>как раньше</small></button>
-            <button class="menu-btn hard" data-level="hard"><span>🔴 Сложный</span><small>хардкор</small></button>
-            <button class="menu-btn campaign" id="campaignBtn"><span>🎮 Кампания</span><small>20 уровней</small></button>
-            <button class="menu-btn daily" id="dailyBtn"><span>📅 Ежедневные</span><small>задания дня</small></button>
-            <button class="menu-btn achievements" id="achievementsBtn"><span>🏆 Достижения</span><small id="achCount">0/15</small></button>
-            <button class="menu-btn upgrade" id="upgradeBtn"><span>⚙️ Прокачка</span><small>улучшения</small></button>
-            <button class="menu-btn teleport" id="teleportBtn"><span>⚡ Телепорт</span><small id="teleportStatus">50 🪙</small></button>
-            <button class="menu-btn shop" id="openShopBtn"><span>🛒 Магазин</span><small>купить машину</small></button>
-        </div>
-
-        <div class="screen hidden" id="shopMenu">
-            <h2>🛒 Магазин</h2>
-            <div class="wallet">🪙 Копилка: <span id="walletShop">0</span></div>
-            <div class="section-title">🚗 Машины</div>
-            <div id="carsList"></div>
-            <div class="section-title">🎁 Бонусы на заезд</div>
-            <div class="bonus-row">
-                <div class="bonus-item" data-bonus="shield"><div class="icon">🛡️</div><div class="title">Щит</div><div class="price">5 🪙</div></div>
-                <div class="bonus-item" data-bonus="slow"><div class="icon">⏱️</div><div class="title">Замедл.</div><div class="price">3 🪙</div></div>
-                <div class="bonus-item" data-bonus="x2"><div class="icon">💰</div><div class="title">x2 очки</div><div class="price">5 🪙</div></div>
-            </div>
-            <button class="menu-btn back" id="closeShopBtn" style="margin-top: 10px;"><span>← Назад</span></button>
-        </div>
-
-        <div class="screen hidden" id="campaignMenu">
-            <h2>🎮 Кампания</h2>
-            <div id="campaignList"></div>
-            <button class="menu-btn back" id="closeCampaignBtn" style="margin-top: 10px;"><span>← Назад</span></button>
-        </div>
-
-        <div class="screen hidden" id="achievementsMenu">
-            <h2>🏆 Достижения</h2>
-            <div id="achievementsList"></div>
-            <button class="menu-btn back" id="closeAchievementsBtn" style="margin-top: 10px;"><span>← Назад</span></button>
-        </div>
-
-        <div class="screen hidden" id="dailyMenu">
-            <h2>📅 Ежедневные задания</h2>
-            <div id="dailyList"></div>
-            <button class="menu-btn back" id="closeDailyBtn" style="margin-top: 10px;"><span>← Назад</span></button>
-        </div>
-
-        <div class="screen hidden" id="upgradeMenu">
-            <h2>⚙️ Прокачка</h2>
-            <div class="wallet">🪙 Копилка: <span id="walletUpgrade">0</span></div>
-            <div id="upgradesList"></div>
-            <button class="menu-btn back" id="closeUpgradeBtn" style="margin-top: 10px;"><span>← Назад</span></button>
-        </div>
-
-        <div class="screen hidden" id="gameOverScreen">
-            <h2>💥 АВАРИЯ!</h2>
-            <div class="wallet" id="gameOverStats"></div>
-            <button class="menu-btn easy" id="restartBtn"><span>🔄 Заново</span><small>тот же уровень</small></button>
-            <button class="menu-btn shop" id="toMenuBtn"><span>🏠 В меню</span><small>выбрать другое</small></button>
         </div>
     </div>
-        <script>
-        // ========== КАРТЫ ==========
-        const MAPS = [
-            { id: 'city',   name: 'Город',   icon: '🌆', skyTop: '#1a1a3e', skyBot: '#4a4a8a', roadColor: '#3a3a55', roadEdge: '#e94560', lineColor: '#ffeb3b', bgColor: '#2d2d44', decorColor: '#4a4a66' },
-            { id: 'desert', name: 'Пустыня', icon: '🏜️', skyTop: '#ff8c42', skyBot: '#ffd89b', roadColor: '#8a6d3b', roadEdge: '#c9a300', lineColor: '#fff59d', bgColor: '#d4a76a', decorColor: '#b8894a' },
-            { id: 'night',  name: 'Ночная',  icon: '🌃', skyTop: '#0a0a1a', skyBot: '#1a1a3a', roadColor: '#1a1a2e', roadEdge: '#9b59b6', lineColor: '#fff',    bgColor: '#0a0a1a', decorColor: '#1f1f3a' },
-            { id: 'forest', name: 'Лес',     icon: '🌲', skyTop: '#2d5a2d', skyBot: '#87ceeb', roadColor: '#2d4a2d', roadEdge: '#4ecca3', lineColor: '#fff59d', bgColor: '#1a3a1a', decorColor: '#2a5a2a' },
-            { id: 'snow',   name: 'Снег',    icon: '❄️', skyTop: '#a8c8e8', skyBot: '#e8f0f8', roadColor: '#c8d4e0', roadEdge: '#4ecca3', lineColor: '#fff',    bgColor: '#e8f0f8', decorColor: '#a8b8c8' }
-        ];
 
-        // ========== МАШИНЫ (НОВЫЕ ЦЕНЫ — все до 100) ==========
-        const CARS = [
-            { id: 'green',     name: 'Обычная',    color: '#4ecca3', price: 0,   icon: '🚗', perk: 'Стандартная',     perkDesc: 'Без способностей' },
-            { id: 'police',    name: 'Полиция',    color: '#3498db', price: 15,  icon: '🚓', perk: 'Сирена',          perkDesc: 'Мигалка и звук' },
-            { id: 'taxi',      name: 'Такси',      color: '#f9a826', price: 20,  icon: '🚕', perk: 'x2 монеты',       perkDesc: 'Монеты вдвое' },
-            { id: 'fire',      name: 'Пожарная',   color: '#e94560', price: 25,  icon: '🚒', perk: 'Сбивает врагов',  perkDesc: 'Уничтожает врага' },
-            { id: 'ambulance', name: 'Скорая',     color: '#ffffff', price: 30,  icon: '🚑', perk: 'Спасает 1 раз',   perkDesc: 'Одна авария прощается' },
-            { id: 'minivan',   name: 'Минивэн',    color: '#16a085', price: 40,  icon: '🚐', perk: 'Широкий',         perkDesc: 'Больше, но медленнее' },
-            { id: 'jeep',      name: 'Джип',       color: '#8b4513', price: 50,  icon: '🚙', perk: 'Неуязвим',        perkDesc: 'Сбивает врагов' },
-            { id: 'formula',   name: 'Формула 1',  color: '#ff1744', price: 70,  icon: '🏎️', perk: 'Турбо',           perkDesc: 'Быстрее на 20%' },
-            { id: 'race',      name: 'Гоночная',   color: '#9b59b6', price: 100, icon: '🏁', perk: 'Дрифт',           perkDesc: 'Резкие повороты' }
-        ];
-
-        const BONUS_PRICES = { shield: 5, slow: 3, x2: 5 };
-        const TELEPORT_PRICE = 50;
-
-        // ========== ДОСТИЖЕНИЯ ==========
-        const ACHIEVEMENTS = [
-            { id: 'first_coin',    name: 'Первая монета',    desc: 'Собери 1 монету',              icon: '🪙', reward: 5,   check: (s) => s.totalCoins >= 1 },
-            { id: 'coins_50',      name: 'Копилка',          desc: 'Собери 50 монет',              icon: '💰', reward: 15,  check: (s) => s.totalCoins >= 50 },
-            { id: 'coins_200',     name: 'Богач',            desc: 'Собери 200 монет',             icon: '💎', reward: 50,  check: (s) => s.totalCoins >= 200 },
-            { id: 'score_1000',    name: 'Первая тысяча',    desc: 'Набери 1000 очков',            icon: '📈', reward: 10,  check: (s) => s.bestScore >= 1000 },
-            { id: 'score_5000',    name: 'Гонщик',           desc: 'Набери 5000 очков',            icon: '🏎️', reward: 25,  check: (s) => s.bestScore >= 5000 },
-            { id: 'score_10000',   name: 'Легенда',          desc: 'Набери 10000 очков',           icon: '⭐', reward: 50,  check: (s) => s.bestScore >= 10000 },
-            { id: 'cars_3',        name: 'Коллекционер',     desc: 'Купи 3 машины',                icon: '🚗', reward: 20,  check: (s) => s.cars >= 3 },
-            { id: 'cars_5',        name: 'Автопарк',         desc: 'Купи 5 машин',                 icon: '🏁', reward: 40,  check: (s) => s.cars >= 5 },
-            { id: 'cars_all',      name: 'Полный гараж',     desc: 'Купи все 9 машин',             icon: '🏆', reward: 100, check: (s) => s.cars >= 9 },
-            { id: 'games_10',      name: 'Заядлый',          desc: 'Сыграй 10 заездов',            icon: '🎮', reward: 15,  check: (s) => s.games >= 10 },
-            { id: 'games_50',      name: 'Профи',            desc: 'Сыграй 50 заездов',            icon: '🎯', reward: 30,  check: (s) => s.games >= 50 },
-            { id: 'maps_3',        name: 'Путешественник',   desc: 'Поиграй на 3 картах',          icon: '🗺️', reward: 20,  check: (s) => s.maps >= 3 },
-            { id: 'maps_all',      name: 'Весь мир',         desc: 'Поиграй на всех 5 картах',     icon: '🌍', reward: 40,  check: (s) => s.maps >= 5 },
-            { id: 'level_5',       name: 'Опытный',          desc: 'Достигни 5 уровня',            icon: '🎖️', reward: 50,  check: (s) => s.playerLevel >= 5 },
-            { id: 'level_10',      name: 'Мастер',           desc: 'Достигни 10 уровня',           icon: '👑', reward: 100, check: (s) => s.playerLevel >= 10 }
-        ];
-
-        // ========== КАМПАНИЯ (20 уровней) ==========
-        const CAMPAIGN = [
-            { id: 1,  name: 'Первые шаги',      task: 'Проедь 500 очков',        goal: 500,  level: 'easy',   map: 'city',   reward: 10 },
-            { id: 2,  name: 'Сборщик',          task: 'Собери 5 монет',          goal: 5,    level: 'easy',   map: 'city',   reward: 10, type: 'coins' },
-            { id: 3,  name: 'Городской гонщик', task: 'Проедь 1000 очков',       goal: 1000, level: 'easy',   map: 'city',   reward: 15 },
-            { id: 4,  name: 'Пустыня зовёт',    task: 'Проедь 1500 очков',       goal: 1500, level: 'medium', map: 'desert', reward: 20 },
-            { id: 5,  name: 'Ночной дозор',     task: 'Проедь 2000 очков',       goal: 2000, level: 'medium', map: 'night',  reward: 25 },
-            { id: 6,  name: 'Лесная тропа',     task: 'Собери 15 монет',         goal: 15,   level: 'medium', map: 'forest', reward: 25, type: 'coins' },
-            { id: 7,  name: 'Снежный заезд',    task: 'Проедь 2500 очков',       goal: 2500, level: 'medium', map: 'snow',   reward: 30 },
-            { id: 8,  name: 'Скорость света',   task: 'Проедь 3000 очков',       goal: 3000, level: 'hard',   map: 'city',   reward: 35 },
-            { id: 9,  name: 'Мастер монет',     task: 'Собери 25 монет',         goal: 25,   level: 'hard',   map: 'desert', reward: 35, type: 'coins' },
-            { id: 10, name: 'Ночной шторм',     task: 'Проедь 3500 очков',       goal: 3500, level: 'hard',   map: 'night',  reward: 40 },
-            { id: 11, name: 'Лесной марафон',   task: 'Проедь 4000 очков',       goal: 4000, level: 'hard',   map: 'forest', reward: 45 },
-            { id: 12, name: 'Снежная буря',     task: 'Проедь 4500 очков',       goal: 4500, level: 'hard',   map: 'snow',   reward: 50 },
-            { id: 13, name: 'Городской ад',     task: 'Проедь 5000 очков',       goal: 5000, level: 'hard',   map: 'city',   reward: 55 },
-            { id: 14, name: 'Пустынный вихрь',  task: 'Собери 40 монет',         goal: 40,   level: 'hard',   map: 'desert', reward: 60, type: 'coins' },
-            { id: 15, name: 'Ночная легенда',   task: 'Проедь 6000 очков',       goal: 6000, level: 'hard',   map: 'night',  reward: 65 },
-            { id: 16, name: 'Лесной дух',       task: 'Проедь 7000 очков',       goal: 7000, level: 'hard',   map: 'forest', reward: 70 },
-            { id: 17, name: 'Снежный король',   task: 'Проедь 8000 очков',       goal: 8000, level: 'hard',   map: 'snow',   reward: 80 },
-            { id: 18, name: 'Городской чемпион',task: 'Проедь 9000 очков',       goal: 9000, level: 'hard',   map: 'city',   reward: 90 },
-            { id: 19, name: 'Пустынный король', task: 'Проедь 10000 очков',      goal: 10000,level: 'hard',   map: 'desert', reward: 100 },
-            { id: 20, name: 'Легенда гонок',    task: 'Проедь 15000 очков',      goal: 15000,level: 'hard',   map: 'night',  reward: 200 }
-        ];
-
-        // ========== ПРОКАЧКА ==========
-        const UPGRADES = [
-            { id: 'engine',   name: '🔧 Двигатель',    desc: 'Скорость +5% за уровень',  maxLevel: 10, basePrice: 20 },
-            { id: 'tires',    name: '🛞 Шины',         desc: 'Управление +5% за уровень', maxLevel: 10, basePrice: 15 },
-            { id: 'magnet',   name: '🧲 Магнит',       desc: 'Радиус сбора монет +10%',   maxLevel: 5,  basePrice: 30 },
-            { id: 'coinbonus',name: '💰 Бонус монет',  desc: '+10% монет за заезд',       maxLevel: 5,  basePrice: 25 },
-            { id: 'shieldtime',name:'🛡️ Длительность щита', desc: 'Щит работает дольше', maxLevel: 5, basePrice: 40 }
-        ];
-
-        // ========== ИГРОВЫЕ УРОВНИ ==========
-        const LEVELS = {
-            easy:   { name: 'Лёгкий',  startSpeed: 1.5, speedRamp: 0.0008, spawnRate: 130, roadMargin: 30, enemySpeedMin: 0.5, enemySpeedMax: 1.2 },
-            medium: { name: 'Средний', startSpeed: 2,   speedRamp: 0.0015, spawnRate: 90,  roadMargin: 40, enemySpeedMin: 1,   enemySpeedMax: 2.5 },
-            hard:   { name: 'Сложный', startSpeed: 3,   speedRamp: 0.003,  spawnRate: 55,  roadMargin: 55, enemySpeedMin: 1.5, enemySpeedMax: 3.5 }
-        };
-
-        // ========== ДАННЫЕ ИГРОКА ==========
-        let wallet = parseInt(localStorage.getItem('r3_wallet') || '0');
-        let ownedCars = JSON.parse(localStorage.getItem('r3_ownedCars') || '["green"]');
-        let equippedCar = localStorage.getItem('r3_equippedCar') || 'green';
-        let selectedMap = localStorage.getItem('r3_selectedMap') || 'city';
-        let activeBonuses = { shield: false, slow: false, x2: false };
-        let teleportActive = false;
-
-        let playerXP = parseInt(localStorage.getItem('r3_xp') || '0');
-        let playerLevel = parseInt(localStorage.getItem('r3_level') || '1');
-        let totalCoins = parseInt(localStorage.getItem('r3_totalCoins') || '0');
-        let totalGames = parseInt(localStorage.getItem('r3_totalGames') || '0');
-        let bestScore = parseInt(localStorage.getItem('r3_bestScore') || '0');
-        let playedMaps = JSON.parse(localStorage.getItem('r3_playedMaps') || '[]');
-        let unlockedAchievements = JSON.parse(localStorage.getItem('r3_achievements') || '[]');
-        let campaignProgress = parseInt(localStorage.getItem('r3_campaign') || '0');
-        let upgrades = JSON.parse(localStorage.getItem('r3_upgrades') || '{"engine":0,"tires":0,"magnet":0,"coinbonus":0,"shieldtime":0}');
-
-        // Ежедневные задания
-        let dailyData = JSON.parse(localStorage.getItem('r3_daily') || 'null');
-        const today = new Date().toDateString();
-        if (!dailyData || dailyData.date !== today) {
-            dailyData = {
-                date: today,
-                tasks: [
-                    { id: 'd_coins', name: '🪙 Собери 20 монет',    progress: 0, goal: 20, reward: 15, done: false },
-                    { id: 'd_score', name: '📈 Набери 3000 очков',  progress: 0, goal: 3000, reward: 20, done: false },
-                    { id: 'd_games', name: '🎮 Сыграй 5 заездов',   progress: 0, goal: 5, reward: 15, done: false }
-                ],
-                claimed: false
-            };
-            localStorage.setItem('r3_daily', JSON.stringify(dailyData));
-        }
-
-        function savePlayer() {
-            localStorage.setItem('r3_wallet', wallet);
-            localStorage.setItem('r3_ownedCars', JSON.stringify(ownedCars));
-            localStorage.setItem('r3_equippedCar', equippedCar);
-            localStorage.setItem('r3_selectedMap', selectedMap);
-            localStorage.setItem('r3_xp', playerXP);
-            localStorage.setItem('r3_level', playerLevel);
-            localStorage.setItem('r3_totalCoins', totalCoins);
-            localStorage.setItem('r3_totalGames', totalGames);
-            localStorage.setItem('r3_bestScore', bestScore);
-            localStorage.setItem('r3_playedMaps', JSON.stringify(playedMaps));
-            localStorage.setItem('r3_achievements', JSON.stringify(unlockedAchievements));
-            localStorage.setItem('r3_campaign', campaignProgress);
-            localStorage.setItem('r3_upgrades', JSON.stringify(upgrades));
-            localStorage.setItem('r3_daily', JSON.stringify(dailyData));
-        }
-
-        function updateWalletUI() {
-            document.getElementById('wallet').textContent = wallet;
-            document.getElementById('walletMenu').textContent = wallet;
-            document.getElementById('walletShop').textContent = wallet;
-            document.getElementById('walletUpgrade').textContent = wallet;
-            document.getElementById('xpDisplay').textContent = playerXP;
-        }
-
-        function getCarById(id) { return CARS.find(c => c.id === id) || CARS[0]; }
-        function getMapById(id) { return MAPS.find(m => m.id === id) || MAPS[0]; }
-
-        function calculateLevel() { return Math.floor(playerXP / 100) + 1; }
-        function getPlayerRank() {
-            const lvl = playerLevel;
-            if (lvl >= 10) return '👑 Легенда';
-            if (lvl >= 7)  return '🏆 Мастер';
-            if (lvl >= 5)  return '⭐ Профи';
-            if (lvl >= 3)  return '🎯 Гонщик';
-            return '🚗 Новичок';
-        }
-        function checkAchievements() {
-            const stats = { totalCoins, bestScore, cars: ownedCars.length, games: totalGames, maps: playedMaps.length, playerLevel };
-            let newUnlocked = false;
-            ACHIEVEMENTS.forEach(ach => {
-                if (!unlockedAchievements.includes(ach.id) && ach.check(stats)) {
-                    unlockedAchievements.push(ach.id);
-                    wallet += ach.reward;
-                    newUnlocked = true;
-                }
-            });
-            if (newUnlocked) { savePlayer(); updateWalletUI(); }
-            return newUnlocked;
-        }
-        function updatePlayerLevel() {
-            const newLevel = calculateLevel();
-            if (newLevel > playerLevel) { playerLevel = newLevel; savePlayer(); }
-        }
-                    // ========== ЗВУКИ ==========
-        let soundEnabled = localStorage.getItem('r3_sound') === 'on';
-        let audioCtx = null;
-        let engineOsc = null;
-        let engineGain = null;
-        let musicInterval = null;
-        let musicPlaying = false;
-
-        function initAudio() {
-            if (!audioCtx) {
-                try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
-            }
-        }
-
-        function playTone(freq, duration, type = 'sine', volume = 0.15, startTime = 0) {
-            if (!soundEnabled || !audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = type;
-            osc.frequency.value = freq;
-            gain.gain.setValueAtTime(volume, audioCtx.currentTime + startTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + startTime + duration);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start(audioCtx.currentTime + startTime);
-            osc.stop(audioCtx.currentTime + startTime + duration);
-        }
-
-        function soundStart() { playTone(440, 0.12, 'square', 0.12, 0); playTone(554, 0.12, 'square', 0.12, 0.13); playTone(659, 0.2, 'square', 0.12, 0.26); }
-        function soundPoint() { playTone(880, 0.08, 'sine', 0.1, 0); }
-        function soundCoin() { playTone(1046, 0.06, 'square', 0.1, 0); playTone(1568, 0.12, 'square', 0.1, 0.06); }
-        function soundPurchase() { playTone(659, 0.1, 'square', 0.15, 0); playTone(880, 0.1, 'square', 0.15, 0.1); playTone(1318, 0.2, 'square', 0.15, 0.2); }
-        function soundSiren() { let t = 0; for (let i = 0; i < 3; i++) { playTone(880, 0.15, 'square', 0.08, t); playTone(660, 0.15, 'square', 0.08, t + 0.15); t += 0.3; } }
-        function soundBoost() { playTone(400, 0.1, 'sawtooth', 0.12, 0); playTone(600, 0.1, 'sawtooth', 0.12, 0.1); playTone(900, 0.2, 'sawtooth', 0.12, 0.2); }
-        function soundTeleport() { playTone(200, 0.1, 'square', 0.1, 0); playTone(500, 0.1, 'square', 0.1, 0.1); playTone(1200, 0.3, 'square', 0.1, 0.2); }
-        function soundAchievement() { playTone(659, 0.15, 'square', 0.15, 0); playTone(880, 0.15, 'square', 0.15, 0.15); playTone(1318, 0.3, 'square', 0.15, 0.3); }
-        function soundCheat() { playTone(523, 0.1, 'square', 0.15, 0); playTone(659, 0.1, 'square', 0.15, 0.1); playTone(784, 0.1, 'square', 0.15, 0.2); playTone(1046, 0.2, 'square', 0.15, 0.3); }
-
-        // 🎉 ПОЗДРАВЛЕНИЕ каждые 500 м
-        function soundCongrats() {
-            playTone(659, 0.12, 'square', 0.15, 0);
-            playTone(784, 0.12, 'square', 0.15, 0.12);
-            playTone(1046, 0.12, 'square', 0.15, 0.24);
-            playTone(1318, 0.25, 'square', 0.15, 0.36);
-        }
-
-        // 💥 НОВЫЙ ЗВУК АВАРИИ — удар + скрежет металла + стекло
-        function soundCrash() {
-            if (!soundEnabled || !audioCtx) return;
-
-            // 1. Низкий удар (бас)
-            const bassOsc = audioCtx.createOscillator();
-            const bassGain = audioCtx.createGain();
-            bassOsc.type = 'sine';
-            bassOsc.frequency.setValueAtTime(120, audioCtx.currentTime);
-            bassOsc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.5);
-            bassGain.gain.setValueAtTime(0.4, audioCtx.currentTime);
-            bassGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
-            bassOsc.connect(bassGain);
-            bassGain.connect(audioCtx.destination);
-            bassOsc.start();
-            bassOsc.stop(audioCtx.currentTime + 0.6);
-
-            // 2. Шум удара (металлический)
-            const bufferSize = audioCtx.sampleRate * 0.5;
-            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-            const data = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) {
-                data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 2);
-            }
-            const noise = audioCtx.createBufferSource();
-            noise.buffer = buffer;
-            const noiseFilter = audioCtx.createBiquadFilter();
-            noiseFilter.type = 'bandpass';
-            noiseFilter.frequency.value = 2000;
-            noiseFilter.Q.value = 1.5;
-            const noiseGain = audioCtx.createGain();
-            noiseGain.gain.setValueAtTime(0.5, audioCtx.currentTime);
-            noiseGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
-            noise.connect(noiseFilter);
-            noiseFilter.connect(noiseGain);
-            noiseGain.connect(audioCtx.destination);
-            noise.start();
-
-            // 3. Скрежет металла (низкий sawtooth)
-            const scrapeOsc = audioCtx.createOscillator();
-            const scrapeGain = audioCtx.createGain();
-            scrapeOsc.type = 'sawtooth';
-            scrapeOsc.frequency.setValueAtTime(80, audioCtx.currentTime + 0.1);
-            scrapeOsc.frequency.linearRampToValueAtTime(40, audioCtx.currentTime + 0.5);
-            scrapeGain.gain.setValueAtTime(0.001, audioCtx.currentTime);
-            scrapeGain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.1);
-            scrapeGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
-            scrapeOsc.connect(scrapeGain);
-            scrapeGain.connect(audioCtx.destination);
-            scrapeOsc.start(audioCtx.currentTime + 0.1);
-            scrapeOsc.stop(audioCtx.currentTime + 0.6);
-
-            // 4. Стекло (высокий короткий "дзынь")
-            for (let i = 0; i < 5; i++) {
-                playTone(3000 + Math.random() * 3000, 0.08, 'triangle', 0.08, 0.2 + Math.random() * 0.3);
-            }
-        }
-
-        function startEngine() {
-            if (!soundEnabled || !audioCtx || engineOsc) return;
-            engineOsc = audioCtx.createOscillator();
-            engineGain = audioCtx.createGain();
-            engineOsc.type = 'sawtooth';
-            engineOsc.frequency.value = 60;
-            engineGain.gain.value = 0.03;
-            engineOsc.connect(engineGain);
-            engineGain.connect(audioCtx.destination);
-            engineOsc.start();
-        }
-        function stopEngine() {
-            if (engineOsc) { try { engineOsc.stop(); } catch(e) {} engineOsc = null; engineGain = null; }
-        }
-        function updateEngine() {
-            if (engineOsc && currentLevel) engineOsc.frequency.value = 60 + speed * 15;
-        }
-
-        // ========== 🎵 ФОНОВАЯ МУЗЫКА ==========
-        // Простая электронная мелодия из нот
-        const MUSIC_NOTES = [
-            440, 523, 659, 523, 440, 392, 440, 523,   // Фаза 1
-            587, 659, 784, 659, 587, 523, 587, 659,   // Фаза 2
-            440, 523, 659, 784, 880, 784, 659, 523,   // Фаза 3
-            392, 440, 523, 659, 523, 440, 392, 330    // Фаза 4
-        ];
-
-        function playMusicNote(index) {
-            if (!soundEnabled || !audioCtx || !musicPlaying) return;
-            const freq = MUSIC_NOTES[index % MUSIC_NOTES.length];
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'triangle';
-            osc.frequency.value = freq;
-            gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.25);
-
-            // Басовая нота (на каждой 4-й)
-            if (index % 4 === 0) {
-                const bassOsc = audioCtx.createOscillator();
-                const bassGain = audioCtx.createGain();
-                bassOsc.type = 'sine';
-                bassOsc.frequency.value = freq / 4;
-                bassGain.gain.setValueAtTime(0.06, audioCtx.currentTime);
-                bassGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
-                bassOsc.connect(bassGain);
-                bassGain.connect(audioCtx.destination);
-                bassOsc.start();
-                bassOsc.stop(audioCtx.currentTime + 0.4);
-            }
-        }
-
-        function startMusic() {
-            if (musicPlaying || !soundEnabled) return;
-            musicPlaying = true;
-            let noteIndex = 0;
-            musicInterval = setInterval(() => {
-                if (!musicPlaying || !soundEnabled) return;
-                playMusicNote(noteIndex);
-                noteIndex++;
-            }, 280);
-        }
-
-        function stopMusic() {
-            musicPlaying = false;
-            if (musicInterval) { clearInterval(musicInterval); musicInterval = null; }
-        }
-
-        // ========== КНОПКА ЗВУКА ==========
-        const soundBtn = document.getElementById('soundBtn');
-        soundBtn.addEventListener('click', () => {
-            initAudio();
-            soundEnabled = !soundEnabled;
-            localStorage.setItem('r3_sound', soundEnabled ? 'on' : 'off');
-            updateSoundBtn();
-            if (soundEnabled) {
-                if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-                soundStart();
-                if (currentLevel && !gameOver) {
-                    startEngine();
-                    startMusic();
-                }
-            } else {
-                stopEngine();
-                stopMusic();
-            }
-        });
-        function updateSoundBtn() {
-            if (soundEnabled) { soundBtn.textContent = '🔊 Звук'; soundBtn.classList.add('on'); }
-            else { soundBtn.textContent = '🔇 Звук'; soundBtn.classList.remove('on'); }
-        }
-        updateSoundBtn();
-
-        // ========== ИГРА ==========
+    <script>
         const canvas = document.getElementById('game');
         const ctx = canvas.getContext('2d');
         const W = canvas.width;
         const H = canvas.height;
-        const scoreEl = document.getElementById('score');
-        const levelNameEl = document.getElementById('levelName');
-        const mainMenuEl = document.getElementById('mainMenu');
-        const shopMenuEl = document.getElementById('shopMenu');
-        const campaignMenuEl = document.getElementById('campaignMenu');
-        const achievementsMenuEl = document.getElementById('achievementsMenu');
-        const dailyMenuEl = document.getElementById('dailyMenu');
-        const upgradeMenuEl = document.getElementById('upgradeMenu');
-        const gameOverScreenEl = document.getElementById('gameOverScreen');
 
-        let best = parseInt(localStorage.getItem('r3_best') || '0');
+        const scoreEl = document.getElementById('score');
+        const bestEl = document.getElementById('best');
+        const levelNameEl = document.getElementById('levelName');
+        const menuEl = document.getElementById('menu');
+
+        let best = parseInt(localStorage.getItem('raceBest') || '0');
+        bestEl.textContent = best;
+
+        // Настройки уровней
+        const LEVELS = {
+            easy: {
+                name: 'Лёгкий',
+                startSpeed: 1.5,
+                speedRamp: 0.0005,
+                spawnRate: 130,
+                roadMargin: 30,
+                enemySpeedMin: 0.5,
+                enemySpeedMax: 1.2
+            },
+            medium: {
+                name: 'Средний',
+                startSpeed: 2,
+                speedRamp: 0.001,
+                spawnRate: 90,
+                roadMargin: 40,
+                enemySpeedMin: 1,
+                enemySpeedMax: 2.5
+            },
+            hard: {
+                name: 'Сложный',
+                startSpeed: 3,
+                speedRamp: 0.002,
+                spawnRate: 55,
+                roadMargin: 55,
+                enemySpeedMin: 1.5,
+                enemySpeedMax: 3.5
+            }
+        };
 
         let currentLevel = null;
-        let currentMap = null;
-        let currentCampaignLevel = null;
-        let player, enemies, coins, obstacles, roadBonuses, score, coinsCollected, speed, gameOver, keys, roadOffset, spawnTimer, coinTimer, obstacleTimer, roadBonusTimer;
+        let player, enemies, score, speed, gameOver, keys, roadOffset, spawnTimer;
         let roadLeft, roadRight;
-        let shieldActive = false, slowActive = false, slowTimer = 0, scoreMultiplier = 1;
-        let boostActive = false, boostTimer = 0, pauseActive = false;
-        let carPerk = '', ambulanceUsed = false;
-        let weather = 'clear';
-        let weatherTimer = 0;
-        let magnetRange = 1;
-        let coinBonusMultiplier = 1;
-        let shieldDuration = 600;
 
-        // 🎉 Поздравления
-        let milestone = 0;               // последний пройденный рубеж (500, 1000, 1500...)
-        let congratsText = '';           // текст поздравления
-        let congratsTimer = 0;           // таймер показа
+        const playerW = 44;
+        const playerH = 78;
+        const enemyW = 44;
+        const enemyH = 78;
 
-        const playerW = 44, playerH = 78, enemyW = 44, enemyH = 78, coinR = 12;
-
-        // ========== 🔑 СЕКРЕТНЫЙ ЧИТ-КОД ==========
-        document.addEventListener('keydown', (e) => {
-            if (e.ctrlKey && e.shiftKey && (e.key === 'M' || e.key === 'm' || e.key === 'ь')) {
-                e.preventDefault();
-                wallet += 1000;
-                savePlayer();
-                updateWalletUI();
-                soundCheat();
-                congratsText = '🔑 +1000 МОНЕТ!';
-                congratsTimer = 180;
-            }
-        });
-                    // ========== МАГАЗИН ==========
-        function renderShop() {
-            const carsList = document.getElementById('carsList');
-            carsList.innerHTML = CARS.map(car => {
-                const owned = ownedCars.includes(car.id);
-                const equipped = equippedCar === car.id;
-                let btnHtml = '';
-                if (equipped) btnHtml = `<button class="buy-btn equip" disabled>✓</button>`;
-                else if (owned) btnHtml = `<button class="buy-btn equip" data-equip="${car.id}">Выбрать</button>`;
-                else {
-                    const canBuy = wallet >= car.price;
-                    btnHtml = `<button class="buy-btn" data-buy="${car.id}" ${canBuy ? '' : 'disabled'}>${car.price} 🪙</button>`;
-                }
-                return `
-                    <div class="shop-item ${equipped ? 'equipped' : (owned ? 'owned' : '')}">
-                        <div class="info">
-                            <div class="car-emoji">${car.icon}</div>
-                            <div>
-                                <div class="name">${car.name}</div>
-                                <div class="desc">${car.perk}: ${car.perkDesc}</div>
-                            </div>
-                        </div>
-                        ${btnHtml}
-                    </div>`;
-            }).join('');
-            document.querySelectorAll('.bonus-item[data-bonus]').forEach(el => {
-                el.classList.toggle('active', activeBonuses[el.dataset.bonus]);
-            });
-        }
-
-        function renderMaps() {
-            const mapRow = document.getElementById('mapRow');
-            mapRow.innerHTML = MAPS.map(map => `
-                <div class="map-item ${selectedMap === map.id ? 'active' : ''}" data-map="${map.id}">
-                    <div class="icon">${map.icon}</div>
-                    <div class="title">${map.name}</div>
-                </div>`).join('');
-            mapRow.querySelectorAll('.map-item').forEach(el => {
-                el.addEventListener('click', () => {
-                    selectedMap = el.dataset.map;
-                    savePlayer();
-                    renderMaps();
-                    soundPurchase();
-                });
-            });
-        }
-
-        document.getElementById('carsList').addEventListener('click', (e) => {
-            const buyId = e.target.dataset.buy;
-            const equipId = e.target.dataset.equip;
-            if (buyId) {
-                const car = getCarById(buyId);
-                if (wallet >= car.price && !ownedCars.includes(car.id)) {
-                    wallet -= car.price;
-                    ownedCars.push(car.id);
-                    equippedCar = car.id;
-                    savePlayer(); updateWalletUI(); soundPurchase(); renderShop();
-                    checkAchievements();
-                }
-            }
-            if (equipId) {
-                equippedCar = equipId;
-                savePlayer(); soundPurchase(); renderShop();
-            }
-        });
-
-        document.querySelectorAll('.bonus-item[data-bonus]').forEach(el => {
-            el.addEventListener('click', () => {
-                const bonus = el.dataset.bonus;
-                const price = BONUS_PRICES[bonus];
-                if (activeBonuses[bonus]) {
-                    wallet += price; activeBonuses[bonus] = false;
-                    savePlayer(); updateWalletUI(); renderShop();
-                    return;
-                }
-                if (wallet >= price) {
-                    wallet -= price; activeBonuses[bonus] = true;
-                    savePlayer(); updateWalletUI(); soundPurchase(); renderShop();
-                }
-            });
-        });
-
-        document.getElementById('teleportBtn').addEventListener('click', () => {
-            if (teleportActive) {
-                wallet += TELEPORT_PRICE; teleportActive = false;
-                savePlayer(); updateWalletUI(); updateTeleportBtn();
-                return;
-            }
-            if (wallet >= TELEPORT_PRICE) {
-                wallet -= TELEPORT_PRICE; teleportActive = true;
-                savePlayer(); updateWalletUI(); updateTeleportBtn(); soundPurchase();
-            }
-        });
-
-        function updateTeleportBtn() {
-            const btn = document.getElementById('teleportBtn');
-            const status = document.getElementById('teleportStatus');
-            if (teleportActive) { btn.classList.add('active'); status.textContent = 'Активен! Старт с 500'; }
-            else { btn.classList.remove('active'); status.textContent = TELEPORT_PRICE + ' 🪙'; }
-        }
-
-        document.getElementById('openShopBtn').addEventListener('click', () => {
-            stopEngine();
-            mainMenuEl.classList.add('hidden');
-            shopMenuEl.classList.remove('hidden');
-            renderShop();
-        });
-        document.getElementById('closeShopBtn').addEventListener('click', () => {
-            mainMenuEl.classList.remove('hidden');
-            shopMenuEl.classList.add('hidden');
-        });
-
-        // ========== КАМПАНИЯ ==========
-        function renderCampaign() {
-            const list = document.getElementById('campaignList');
-            list.innerHTML = CAMPAIGN.map(lvl => {
-                const completed = campaignProgress >= lvl.id;
-                const locked = lvl.id > campaignProgress + 1;
-                const status = completed ? '✅' : (locked ? '🔒' : '▶️');
-                return `
-                    <div class="campaign-level ${completed ? 'completed' : ''} ${locked ? 'locked' : ''}" data-campaign="${lvl.id}">
-                        <div class="cl-num">${lvl.id}</div>
-                        <div class="cl-info">
-                            <div class="cl-name">${lvl.name}</div>
-                            <div class="cl-task">${lvl.task} | +${lvl.reward} 🪙</div>
-                        </div>
-                        <div class="cl-status">${status}</div>
-                    </div>`;
-            }).join('');
-
-            list.querySelectorAll('.campaign-level').forEach(el => {
-                el.addEventListener('click', () => {
-                    const id = parseInt(el.dataset.campaign);
-                    const lvl = CAMPAIGN.find(c => c.id === id);
-                    if (!lvl || id > campaignProgress + 1) return;
-                    currentCampaignLevel = lvl;
-                    selectedMap = lvl.map;
-                    savePlayer();
-                    startGame(lvl.level);
-                });
-            });
-        }
-
-        document.getElementById('campaignBtn').addEventListener('click', () => {
-            stopEngine();
-            mainMenuEl.classList.add('hidden');
-            campaignMenuEl.classList.remove('hidden');
-            renderCampaign();
-        });
-        document.getElementById('closeCampaignBtn').addEventListener('click', () => {
-            mainMenuEl.classList.remove('hidden');
-            campaignMenuEl.classList.add('hidden');
-        });
-
-        // ========== ДОСТИЖЕНИЯ ==========
-        function renderAchievements() {
-            const list = document.getElementById('achievementsList');
-            list.innerHTML = ACHIEVEMENTS.map(ach => {
-                const unlocked = unlockedAchievements.includes(ach.id);
-                return `
-                    <div class="achievement-item ${unlocked ? 'unlocked' : ''}">
-                        <div class="ach-icon">${ach.icon}</div>
-                        <div class="ach-info">
-                            <div class="ach-name">${ach.name}</div>
-                            <div class="ach-desc">${ach.desc} | +${ach.reward} 🪙</div>
-                        </div>
-                        <div class="ach-status">${unlocked ? '✅' : '🔒'}</div>
-                    </div>`;
-            }).join('');
-            document.getElementById('achCount').textContent = `${unlockedAchievements.length}/${ACHIEVEMENTS.length}`;
-        }
-
-        document.getElementById('achievementsBtn').addEventListener('click', () => {
-            stopEngine();
-            mainMenuEl.classList.add('hidden');
-            achievementsMenuEl.classList.remove('hidden');
-            renderAchievements();
-        });
-        document.getElementById('closeAchievementsBtn').addEventListener('click', () => {
-            mainMenuEl.classList.remove('hidden');
-            achievementsMenuEl.classList.add('hidden');
-        });
-
-        // ========== ЕЖЕДНЕВНЫЕ ==========
-        function renderDaily() {
-            const list = document.getElementById('dailyList');
-            const allDone = dailyData.tasks.every(t => t.done);
-            list.innerHTML = dailyData.tasks.map(t => {
-                const pct = Math.min(100, Math.floor(t.progress / t.goal * 100));
-                return `
-                    <div class="achievement-item ${t.done ? 'unlocked' : ''}">
-                        <div class="ach-icon">${t.done ? '✅' : '📋'}</div>
-                        <div class="ach-info">
-                            <div class="ach-name">${t.name}</div>
-                            <div class="ach-desc">${t.progress}/${t.goal} | +${t.reward} 🪙</div>
-                            <div class="up-bar" style="margin-top:4px;">
-                                <div class="up-fill" style="width:${pct}%"></div>
-                            </div>
-                        </div>
-                    </div>`;
-            }).join('');
-
-            if (allDone && !dailyData.claimed) {
-                const btn = document.createElement('button');
-                btn.className = 'menu-btn easy';
-                btn.innerHTML = '<span>🎁 Забрать награду</span><small>+50 🪙</small>';
-                btn.style.marginTop = '10px';
-                btn.addEventListener('click', () => {
-                    dailyData.claimed = true;
-                    wallet += 50;
-                    savePlayer();
-                    updateWalletUI();
-                    soundAchievement();
-                    renderDaily();
-                });
-                list.appendChild(btn);
-            }
-        }
-
-        document.getElementById('dailyBtn').addEventListener('click', () => {
-            stopEngine();
-            mainMenuEl.classList.add('hidden');
-            dailyMenuEl.classList.remove('hidden');
-            renderDaily();
-        });
-        document.getElementById('closeDailyBtn').addEventListener('click', () => {
-            mainMenuEl.classList.remove('hidden');
-            dailyMenuEl.classList.add('hidden');
-        });
-
-        // ========== ПРОКАЧКА ==========
-        function renderUpgrades() {
-            const list = document.getElementById('upgradesList');
-            list.innerHTML = UPGRADES.map(up => {
-                const lvl = upgrades[up.id] || 0;
-                const max = up.maxLevel;
-                const price = up.basePrice + lvl * 10;
-                const canBuy = lvl < max && wallet >= price;
-                const pct = Math.floor(lvl / max * 100);
-                return `
-                    <div class="upgrade-item">
-                        <div class="up-header">
-                            <div class="up-name">${up.name}</div>
-                            <div class="up-level">Ур. ${lvl}/${max}</div>
-                        </div>
-                        <div class="up-bar"><div class="up-fill" style="width:${pct}%"></div></div>
-                        <div class="ach-desc" style="margin-top:6px;">${up.desc}</div>
-                        <button class="up-btn" data-upgrade="${up.id}" ${canBuy ? '' : 'disabled'}>
-                            ${lvl >= max ? 'МАКС' : `Улучшить за ${price} 🪙`}
-                        </button>
-                    </div>`;
-            }).join('');
-
-            list.querySelectorAll('.up-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const id = btn.dataset.upgrade;
-                    const up = UPGRADES.find(u => u.id === id);
-                    const lvl = upgrades[id] || 0;
-                    const price = up.basePrice + lvl * 10;
-                    if (lvl < up.maxLevel && wallet >= price) {
-                        wallet -= price;
-                        upgrades[id] = lvl + 1;
-                        savePlayer();
-                        updateWalletUI();
-                        soundPurchase();
-                        applyUpgrades();
-                        renderUpgrades();
-                    }
-                });
-            });
-        }
-
-        function applyUpgrades() {
-            magnetRange = 1 + (upgrades.magnet || 0) * 0.1;
-            coinBonusMultiplier = 1 + (upgrades.coinbonus || 0) * 0.1;
-            shieldDuration = 600 + (upgrades.shieldtime || 0) * 60;
-        }
-
-        document.getElementById('upgradeBtn').addEventListener('click', () => {
-            stopEngine();
-            mainMenuEl.classList.add('hidden');
-            upgradeMenuEl.classList.remove('hidden');
-            renderUpgrades();
-        });
-        document.getElementById('closeUpgradeBtn').addEventListener('click', () => {
-            mainMenuEl.classList.remove('hidden');
-            upgradeMenuEl.classList.add('hidden');
-        });
-                    // ========== УПРАВЛЕНИЕ ИГРОЙ ==========
         function startGame(levelKey) {
-            initAudio();
-            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-            hideGameOver();
-
-            applyUpgrades();
-
             currentLevel = LEVELS[levelKey];
-            currentMap = getMapById(selectedMap);
             levelNameEl.textContent = currentLevel.name;
 
-            const roadMargin = teleportActive ? currentLevel.roadMargin + 10 : currentLevel.roadMargin;
-            roadLeft = roadMargin;
-            roadRight = W - roadMargin;
+            roadLeft = currentLevel.roadMargin;
+            roadRight = W - currentLevel.roadMargin;
 
-            player = { x: W / 2, y: H - 100 };  // центр по X, ближе к низу
+            player = { x: W / 2 - playerW / 2, y: H - playerH - 20 };
             enemies = [];
-            coins = [];
-            obstacles = [];
-            roadBonuses = [];
-            score = teleportActive ? 500 : 0;
-            coinsCollected = 0;
-            speed = teleportActive ? currentLevel.startSpeed * 1.5 : currentLevel.startSpeed;
+            score = 0;
+            speed = currentLevel.startSpeed;
             gameOver = false;
-            pauseActive = false;
             keys = { left: false, right: false };
             roadOffset = 0;
             spawnTimer = 0;
-            coinTimer = 60;
-            obstacleTimer = 200;
-            roadBonusTimer = 300;
-            scoreEl.textContent = Math.floor(score);
+            scoreEl.textContent = 0;
 
-            shieldActive = activeBonuses.shield;
-            slowActive = activeBonuses.slow;
-            slowTimer = slowActive ? 600 : 0;
-            scoreMultiplier = activeBonuses.x2 ? 2 : 1;
-            boostActive = false;
-            boostTimer = 0;
-            ambulanceUsed = false;
-
-            // Погода
-            const weatherRoll = Math.random();
-            if (weatherRoll < 0.6) weather = 'clear';
-            else if (weatherRoll < 0.75) weather = 'rain';
-            else if (weatherRoll < 0.9) weather = 'snow';
-            else weather = 'fog';
-            weatherTimer = 600;
-
-            // Поздравления
-            milestone = 0;
-            congratsText = '';
-            congratsTimer = 0;
-
-            const car = getCarById(equippedCar);
-            carPerk = car.perk;
-
-            if (car.id === 'formula') speed *= 1.2;
-            if (car.id === 'minivan') speed *= 0.85;
-
-            speed *= 1 + (upgrades.engine || 0) * 0.05;
-
-            mainMenuEl.classList.add('hidden');
-            shopMenuEl.classList.add('hidden');
-            campaignMenuEl.classList.add('hidden');
-            achievementsMenuEl.classList.add('hidden');
-            dailyMenuEl.classList.add('hidden');
-            upgradeMenuEl.classList.add('hidden');
-
-            updateAbilities();
-
-            if (soundEnabled) {
-                stopEngine();
-                stopMusic();
-                soundStart();
-                if (car.id === 'police') setTimeout(soundSiren, 600);
-                setTimeout(() => { startEngine(); startMusic(); }, 500);
-            }
+            menuEl.classList.add('hidden');
         }
 
-        function showMainMenu() {
-            stopEngine();
-            stopMusic();
-            mainMenuEl.classList.remove('hidden');
-            shopMenuEl.classList.add('hidden');
-            campaignMenuEl.classList.add('hidden');
-            achievementsMenuEl.classList.add('hidden');
-            dailyMenuEl.classList.add('hidden');
-            upgradeMenuEl.classList.add('hidden');
-            gameOverScreenEl.classList.add('hidden');
+        function showMenu() {
+            menuEl.classList.remove('hidden');
             levelNameEl.textContent = '—';
+            // Очистим канвас
             ctx.fillStyle = '#2d2d44';
             ctx.fillRect(0, 0, W, H);
-            renderMaps();
-            updateTeleportBtn();
-            updatePlayerStats();
-            currentCampaignLevel = null;
         }
 
-        function updatePlayerStats() {
-            const stats = document.getElementById('playerStats');
-            stats.textContent = `${getPlayerRank()} | Ур. ${playerLevel} | XP: ${playerXP}`;
-        }
-
-        function showGameOver() {
-            const stats = document.getElementById('gameOverStats');
-            let extra = '';
-            if (currentCampaignLevel) {
-                const done = currentCampaignLevel.type === 'coins'
-                    ? coinsCollected >= currentCampaignLevel.goal
-                    : Math.floor(score) >= currentCampaignLevel.goal;
-                extra = done ? '<br>✅ Задание выполнено!' : '<br>❌ Задание не выполнено';
-            }
-            stats.innerHTML = `Очки: <strong>${Math.floor(score)}</strong> | 🪙 <strong>${coinsCollected}</strong>${extra}`;
-            gameOverScreenEl.classList.remove('hidden');
-        }
-
-        function hideGameOver() {
-            gameOverScreenEl.classList.add('hidden');
-        }
-
-        // ========== СПОСОБНОСТИ ==========
-        function updateAbilities() {
-            const boostBtn = document.getElementById('abilityBoost');
-            const shieldBtn = document.getElementById('abilityShield');
-            const teleportBtn = document.getElementById('abilityTeleport');
-            const car = getCarById(equippedCar);
-
-            boostBtn.disabled = !(car.id === 'formula' || car.id === 'race');
-            shieldBtn.disabled = !(activeBonuses.shield || shieldActive);
-            teleportBtn.disabled = !teleportActive;
-
-            boostBtn.classList.toggle('active', boostActive);
-            shieldBtn.classList.toggle('active', shieldActive);
-        }
-
-        function activateBoost() {
-            if (boostActive || gameOver || !currentLevel) return;
-            const car = getCarById(equippedCar);
-            if (car.id !== 'formula' && car.id !== 'race') return;
-            boostActive = true;
-            boostTimer = 180;
-            soundBoost();
-            updateAbilities();
-        }
-
-        function activateShield() {
-            if (shieldActive || gameOver || !currentLevel) return;
-            shieldActive = true;
-            soundPurchase();
-            updateAbilities();
-        }
-
-        function activateTeleport() {
-            if (!teleportActive || gameOver || !currentLevel) return;
-            enemies = [];
-            coins.forEach(c => c.y += 200);
-            soundTeleport();
-            teleportActive = false;
-            updateTeleportBtn();
-            updateAbilities();
-        }
-
-        function togglePause() {
-            if (gameOver || !currentLevel) return;
-            pauseActive = !pauseActive;
-            const pauseBtn = document.getElementById('abilityPause');
-            if (pauseActive) {
-                pauseBtn.classList.add('active');
-                stopEngine();
-                stopMusic();
-            } else {
-                pauseBtn.classList.remove('active');
-                if (soundEnabled) { startEngine(); startMusic(); }
-            }
-        }
-
-        document.getElementById('abilityBoost').addEventListener('click', activateBoost);
-        document.getElementById('abilityShield').addEventListener('click', activateShield);
-        document.getElementById('abilityTeleport').addEventListener('click', activateTeleport);
-        document.getElementById('abilityPause').addEventListener('click', togglePause);
-
-        document.getElementById('restartBtn').addEventListener('click', () => {
-            hideGameOver();
-            startGame(Object.keys(LEVELS).find(k => LEVELS[k] === currentLevel));
-        });
-        document.getElementById('toMenuBtn').addEventListener('click', () => {
-            hideGameOver();
-            showMainMenu();
-        });
-
-        // ========== СПАВН (с 3D-координатами) ==========
-              function spawnEnemy() {
-            const x = 60 + Math.random() * (W - 120);
+        function spawnEnemy() {
+            const x = roadLeft + Math.random() * (roadRight - roadLeft - enemyW);
             const colors = ['#e94560', '#f9a826', '#9b59b6', '#3498db', '#e67e22'];
-            const types = ['car', 'car', 'car', 'truck', 'moto'];
             enemies.push({
                 x: x,
-                y: 0,
+                y: -enemyH,
                 color: colors[Math.floor(Math.random() * colors.length)],
-                speed: currentLevel.enemySpeedMin + Math.random() * (currentLevel.enemySpeedMax - currentLevel.enemySpeedMin),
-                type: types[Math.floor(Math.random() * types.length)]
+                speed: currentLevel.enemySpeedMin +
+                       Math.random() * (currentLevel.enemySpeedMax - currentLevel.enemySpeedMin)
             });
         }
 
-        function spawnCoin() {
-            const x = 60 + Math.random() * (W - 120);
-            coins.push({ x: x, y: 0, phase: Math.random() * Math.PI * 2 });
+        function drawCar(x, y, w, h, color, isPlayer) {
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.fillRect(x + 3, y + 4, w, h);
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, w, h);
+            ctx.fillStyle = 'rgba(255,255,255,0.25)';
+            ctx.fillRect(x + 6, y + 12, w - 12, h - 24);
+            ctx.fillStyle = 'rgba(150,220,255,0.7)';
+            ctx.fillRect(x + 8, y + 6, w - 16, 14);
+            ctx.fillRect(x + 8, y + h - 20, w - 16, 14);
+            ctx.fillStyle = isPlayer ? '#ffeb3b' : '#ff5252';
+            ctx.fillRect(x + 4, isPlayer ? y + 2 : y + h - 5, 8, 4);
+            ctx.fillRect(x + w - 12, isPlayer ? y + 2 : y + h - 5, 8, 4);
         }
 
-        function spawnObstacle() {
-            const x = 40 + Math.random() * (W - 80);
-            const types = ['cone', 'pit', 'puddle'];
-            obstacles.push({ x: x, y: 0, type: types[Math.floor(Math.random() * types.length)] });
-        }
-
-        function spawnRoadBonus() {
-            const x = 40 + Math.random() * (W - 80);
-            const types = ['boost', 'magnet', 'shield'];
-            roadBonuses.push({ x: x, y: 0, type: types[Math.floor(Math.random() * types.length)], phase: 0 });
-        }
-
-        // ========== ОБНОВЛЕНИЕ ==========
         function update() {
-            if (gameOver || !currentLevel || pauseActive) return;
+            if (gameOver || !currentLevel) return;
 
-            // Движение игрока (X — по горизонтали)
-            const playerSpeed = 5 * (1 + (upgrades.tires || 0) * 0.05);
-            if (keys.left) player.x -= playerSpeed;
-            if (keys.right) player.x += playerSpeed;
-            player.x = Math.max(40, Math.min(W - 40, player.x));
+            const playerSpeed = 5;
+            if (keys.left && player.x > roadLeft) player.x -= playerSpeed;
+            if (keys.right && player.x < roadRight - playerW) player.x += playerSpeed;
 
             roadOffset = (roadOffset + speed) % 60;
 
-            if (slowActive) { slowTimer -= 1; if (slowTimer <= 0) slowActive = false; }
-            if (boostActive) { boostTimer -= 1; if (boostTimer <= 0) { boostActive = false; updateAbilities(); } }
-
-            // Погода
-            weatherTimer -= 1;
-            if (weatherTimer <= 0) {
-                const roll = Math.random();
-                if (roll < 0.6) weather = 'clear';
-                else if (roll < 0.75) weather = 'rain';
-                else if (roll < 0.9) weather = 'snow';
-                else weather = 'fog';
-                weatherTimer = 600;
+            spawnTimer += speed;
+            if (spawnTimer > currentLevel.spawnRate) {
+                spawnEnemy();
+                spawnTimer = 0;
             }
 
-            const boostFactor = boostActive ? 1.8 : 1;
-
-            spawnTimer += speed * boostFactor;
-            if (spawnTimer > currentLevel.spawnRate) { spawnEnemy(); spawnTimer = 0; }
-
-            coinTimer -= 1;
-            if (coinTimer <= 0) { spawnCoin(); coinTimer = 120 + Math.random() * 120; }
-
-            obstacleTimer -= 1;
-            if (obstacleTimer <= 0) { spawnObstacle(); obstacleTimer = 200 + Math.random() * 200; }
-
-            roadBonusTimer -= 1;
-            if (roadBonusTimer <= 0) { spawnRoadBonus(); roadBonusTimer = 400 + Math.random() * 300; }
-
-            // Враги (Y — глубина, увеличивается)
             for (let i = enemies.length - 1; i >= 0; i--) {
-                enemies[i].y += (speed + enemies[i].speed) * boostFactor;
+                enemies[i].y += speed + enemies[i].speed;
 
-                // Столкновение: если враг на глубине 0.8–1.0 и по X близко к игроку
-                if (enemies[i].y > 0.8 && enemies[i].y < 1.05) {
-                    const dx = Math.abs(enemies[i].x - player.x);
-                    if (dx < 40) {
-                        const car = getCarById(equippedCar);
-                        if (shieldActive) {
-                            enemies.splice(i, 1); shieldActive = false;
-                            playTone(200, 0.3, 'sawtooth', 0.15, 0);
-                            updateAbilities();
-                            continue;
-                        }
-                        if (car.id === 'jeep' || car.id === 'fire') {
-                            enemies.splice(i, 1); score += 20; soundPoint();
-                            continue;
-                        }
-                        if (car.id === 'ambulance' && !ambulanceUsed) {
-                            enemies.splice(i, 1); ambulanceUsed = true;
-                            playTone(400, 0.3, 'sine', 0.15, 0);
-                            continue;
-                        }
-                        crashGame();
-                        return;
+                if (
+                    player.x < enemies[i].x + enemyW &&
+                    player.x + playerW > enemies[i].x &&
+                    player.y < enemies[i].y + enemyH &&
+                    player.y + playerH > enemies[i].y
+                ) {
+                    gameOver = true;
+                    if (score > best) {
+                        best = Math.floor(score);
+                        localStorage.setItem('raceBest', best);
+                        bestEl.textContent = best;
                     }
                 }
 
-                if (enemies[i] && enemies[i].y > 1.2) {
+                if (enemies[i].y > H) {
                     enemies.splice(i, 1);
-                    score += 10 * scoreMultiplier;
+                    score += 10;
                     scoreEl.textContent = Math.floor(score);
-                    soundPoint();
                 }
             }
 
-            // Монеты
-            const car = getCarById(equippedCar);
-            const coinMultiplier = (car.id === 'taxi' ? 2 : 1) * coinBonusMultiplier;
-            for (let i = coins.length - 1; i >= 0; i--) {
-                coins[i].y += speed * boostFactor;
-                coins[i].phase += 0.15;
-                if (coins[i].y > 0.8 && coins[i].y < 1.05) {
-                    const dx = Math.abs(coins[i].x - player.x);
-                    if (dx < 45 * magnetRange) {
-                        coins.splice(i, 1);
-                        wallet += coinMultiplier;
-                        coinsCollected += 1;
-                        totalCoins += 1;
-                        savePlayer(); updateWalletUI(); soundCoin();
-                        continue;
-                    }
-                }
-                if (coins[i].y > 1.2) coins.splice(i, 1);
-            }
-
-            // Препятствия
-            for (let i = obstacles.length - 1; i >= 0; i--) {
-                obstacles[i].y += speed * boostFactor;
-                if (obstacles[i].y > 0.8 && obstacles[i].y < 1.05) {
-                    const dx = Math.abs(obstacles[i].x - player.x);
-                    if (dx < 35) {
-                        if (obstacles[i].type === 'puddle') {
-                            speed = Math.max(currentLevel.startSpeed, speed - 0.1);
-                            obstacles.splice(i, 1);
-                            continue;
-                        }
-                        if (shieldActive) {
-                            obstacles.splice(i, 1); shieldActive = false;
-                            updateAbilities();
-                            continue;
-                        }
-                        if (car.id === 'jeep') {
-                            obstacles.splice(i, 1);
-                            continue;
-                        }
-                        crashGame();
-                        return;
-                    }
-                }
-                if (obstacles[i] && obstacles[i].y > 1.2) obstacles.splice(i, 1);
-            }
-
-            // Бонусы на дороге
-            for (let i = roadBonuses.length - 1; i >= 0; i--) {
-                roadBonuses[i].y += speed * boostFactor;
-                roadBonuses[i].phase += 0.15;
-                if (roadBonuses[i].y > 0.8 && roadBonuses[i].y < 1.05) {
-                    const dx = Math.abs(roadBonuses[i].x - player.x);
-                    if (dx < 45) {
-                        const type = roadBonuses[i].type;
-                        if (type === 'boost') { boostActive = true; boostTimer = 120; soundBoost(); }
-                        else if (type === 'magnet') {
-                            magnetRange = 3;
-                            setTimeout(() => { magnetRange = 1 + (upgrades.magnet || 0) * 0.1; }, 5000);
-                            soundCoin();
-                        }
-                        else if (type === 'shield') { shieldActive = true; soundPurchase(); updateAbilities(); }
-                        roadBonuses.splice(i, 1);
-                        continue;
-                    }
-                }
-                if (roadBonuses[i] && roadBonuses[i].y > 1.2) roadBonuses.splice(i, 1);
-            }
-
-            // Скорость и очки
             speed += currentLevel.speedRamp;
-            const oldScore = Math.floor(score / 1000);
-            score += speed * 0.05 * scoreMultiplier;
-            const newScore = Math.floor(score / 1000);
-            if (newScore > oldScore) { wallet += 10; savePlayer(); updateWalletUI(); }
+            score += speed * 0.05;
             scoreEl.textContent = Math.floor(score);
-            updateEngine();
-
-            // 🎉 ПОЗДРАВЛЕНИЯ каждые 500 м (очков)
-            const currentMeters = Math.floor(score / 500) * 500;
-            if (currentMeters > milestone && currentMeters >= 500) {
-                milestone = currentMeters;
-                congratsText = `🎉 ${currentMeters} М!`;
-                congratsTimer = 180;
-                wallet += 10;
-                score += 100;
-                savePlayer(); updateWalletUI();
-                soundCongrats();
-            }
-            if (congratsTimer > 0) congratsTimer -= 1;
         }
 
-        function crashGame() {
-            gameOver = true;
-            stopEngine();
-            stopMusic();
-            soundCrash();
-
-            totalGames += 1;
-            const finalScore = Math.floor(score);
-            if (finalScore > bestScore) bestScore = finalScore;
-            if (finalScore > best) { best = finalScore; localStorage.setItem('r3_best', best); }
-            if (!playedMaps.includes(selectedMap)) playedMaps.push(selectedMap);
-
-            dailyData.tasks.forEach(t => {
-                if (t.done) return;
-                if (t.id === 'd_coins') t.progress += coinsCollected;
-                if (t.id === 'd_score') t.progress = Math.max(t.progress, finalScore);
-                if (t.id === 'd_games') t.progress += 1;
-                if (t.progress >= t.goal) t.done = true;
-            });
-
-            if (currentCampaignLevel) {
-                const done = currentCampaignLevel.type === 'coins'
-                    ? coinsCollected >= currentCampaignLevel.goal
-                    : finalScore >= currentCampaignLevel.goal;
-                if (done && campaignProgress < currentCampaignLevel.id) {
-                    campaignProgress = currentCampaignLevel.id;
-                    wallet += currentCampaignLevel.reward;
-                    soundAchievement();
-                }
-            }
-
-            playerXP += Math.floor(finalScore / 100);
-            updatePlayerLevel();
-
-            checkAchievements();
-            savePlayer();
-            updateWalletUI();
-
-            showGameOver();
-        }
-                    // ========== ОТРИСОВКА ==========
-        function roundRect(x, y, w, h, r) {
-            ctx.beginPath();
-            ctx.moveTo(x + r, y);
-            ctx.lineTo(x + w - r, y);
-            ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-            ctx.lineTo(x + w, y + h - r);
-            ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-            ctx.lineTo(x + r, y + h);
-            ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-            ctx.lineTo(x, y + r);
-            ctx.quadraticCurveTo(x, y, x + r, y);
-            ctx.closePath();
-        }
-
-        function shadeColor(color, percent) {
-            if (color.startsWith('rgba') || color === '#ffffff' || color === '#fff') return color;
-            const num = parseInt(color.replace('#', ''), 16);
-            const amt = Math.round(2.55 * percent);
-            const R = Math.max(0, Math.min(255, (num >> 16) + amt));
-            const G = Math.max(0, Math.min(255, ((num >> 8) & 0x00FF) + amt));
-            const B = Math.max(0, Math.min(255, (num & 0x0000FF) + amt));
-            return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
-        }
-
-        // ========== 3D-ПРОЕКЦИЯ ==========
-        // y = 0 → далеко (у горизонта), y = 1 → близко (внизу)
-        const HORIZON_Y = 180;      // где горизонт на канвасе
-        const ROAD_TOP_W = 60;      // ширина дороги у горизонта
-        const ROAD_BOT_W = 320;     // ширина дороги внизу
-
-        function projectY(y) {
-            // y от 0 до 1 → экранный Y от HORIZON_Y до H
-            return HORIZON_Y + y * (H - HORIZON_Y);
-        }
-
-        function projectRoadWidth(y) {
-            // ширина дороги на глубине y
-            return ROAD_TOP_W + y * (ROAD_BOT_W - ROAD_TOP_W);
-        }
-
-        function projectX(worldX, y) {
-            // worldX от 0 до W (мировые координаты) → экранный X
-            const roadW = projectRoadWidth(y);
-            const centerX = W / 2;
-            const offset = (worldX - W / 2) / W;   // -0.5 .. 0.5
-            return centerX + offset * roadW;
-        }
-
-        function projectScale(y) {
-            // масштаб объекта на глубине y
-            return 0.15 + y * 0.85;
-        }
-
-        // ========== ОТРИСОВКА МАШИНЫ 3D ==========
-               function drawCar3D(worldX, depthY, color, isPlayer, carType) {
-            if (depthY < 0 || depthY > 1.05) return;
-
-            const screenX = projectX(worldX, depthY);
-            const screenY = projectY(depthY);
-            const scale = projectScale(depthY);
-
-            const w = playerW * scale;
-            const h = playerH * scale;
-
-            if (w < 5) return;
-
-            // 🌑 Тень
-            ctx.fillStyle = 'rgba(0,0,0,0.4)';
-            ctx.beginPath();
-            ctx.ellipse(screenX, screenY + 2, w * 0.6, h * 0.15, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            // 🔘 Колёса
-            ctx.fillStyle = '#0a0a0a';
-            const wheelW = 6 * scale, wheelH = 14 * scale;
-            roundRect(screenX - w / 2 - wheelW / 2, screenY - h * 0.85, wheelW, wheelH, 2 * scale); ctx.fill();
-            roundRect(screenX + w / 2 - wheelW / 2, screenY - h * 0.85, wheelW, wheelH, 2 * scale); ctx.fill();
-            roundRect(screenX - w / 2 - wheelW / 2, screenY - h * 0.3, wheelW, wheelH, 2 * scale); ctx.fill();
-            roundRect(screenX + w / 2 - wheelW / 2, screenY - h * 0.3, wheelW, wheelH, 2 * scale); ctx.fill();
-
-            // 🚗 Корпус
-            const grad = ctx.createLinearGradient(screenX - w / 2, screenY - h, screenX + w / 2, screenY);
-            grad.addColorStop(0, shadeColor(color, -40));
-            grad.addColorStop(0.3, color);
-            grad.addColorStop(0.7, shadeColor(color, 15));
-            grad.addColorStop(1, shadeColor(color, -40));
-            ctx.fillStyle = grad;
-            roundRect(screenX - w / 2, screenY - h, w, h, 8 * scale);
-            ctx.fill();
-
-            // 🌟 Блик
-            ctx.fillStyle = 'rgba(255,255,255,0.3)';
-            roundRect(screenX - w / 2 + 3 * scale, screenY - h + 3 * scale, w - 6 * scale, h * 0.15, 4 * scale);
-            ctx.fill();
-
-            // 🪟 Заднее стекло
-            const glassGrad = ctx.createLinearGradient(0, screenY - h, 0, screenY - h * 0.6);
-            glassGrad.addColorStop(0, 'rgba(150,220,255,0.9)');
-            glassGrad.addColorStop(1, 'rgba(80,150,200,0.7)');
-            ctx.fillStyle = glassGrad;
-            roundRect(screenX - w / 2 + 4 * scale, screenY - h + 5 * scale, w - 8 * scale, h * 0.25, 4 * scale);
-            ctx.fill();
-
-            // 🔴 Фары
-            if (isPlayer) {
-                ctx.fillStyle = '#ff1744';
-                roundRect(screenX - w / 2 + 2 * scale, screenY - 8 * scale, 10 * scale, 5 * scale, 2 * scale); ctx.fill();
-                roundRect(screenX + w / 2 - 12 * scale, screenY - 8 * scale, 10 * scale, 5 * scale, 2 * scale); ctx.fill();
-
-                const glow = ctx.createRadialGradient(screenX - w / 2 + 7 * scale, screenY - 6 * scale, 0, screenX - w / 2 + 7 * scale, screenY - 6 * scale, 25 * scale);
-                glow.addColorStop(0, 'rgba(255, 23, 68, 0.5)');
-                glow.addColorStop(1, 'rgba(255, 23, 68, 0)');
-                ctx.fillStyle = glow;
-                ctx.fillRect(screenX - w / 2 - 25 * scale, screenY - 30 * scale, 50 * scale, 50 * scale);
-
-                const glow2 = ctx.createRadialGradient(screenX + w / 2 - 7 * scale, screenY - 6 * scale, 0, screenX + w / 2 - 7 * scale, screenY - 6 * scale, 25 * scale);
-                glow2.addColorStop(0, 'rgba(255, 23, 68, 0.5)');
-                glow2.addColorStop(1, 'rgba(255, 23, 68, 0)');
-                ctx.fillStyle = glow2;
-                ctx.fillRect(screenX + w / 2 - 25 * scale, screenY - 30 * scale, 50 * scale, 50 * scale);
-
-                if (carPerk === 'Сирена') {
-                    const flash = Math.floor(Date.now() / 200) % 2;
-                    ctx.fillStyle = flash === 0 ? '#ff1744' : '#2979ff';
-                    roundRect(screenX - 8 * scale, screenY - h - 5 * scale, 16 * scale, 5 * scale, 3 * scale);
-                    ctx.fill();
-
-                    const flashGlow = ctx.createRadialGradient(screenX, screenY - h - 3 * scale, 0, screenX, screenY - h - 3 * scale, 30 * scale);
-                    flashGlow.addColorStop(0, flash === 0 ? 'rgba(255, 23, 68, 0.6)' : 'rgba(41, 121, 255, 0.6)');
-                    flashGlow.addColorStop(1, 'rgba(0,0,0,0)');
-                    ctx.fillStyle = flashGlow;
-                    ctx.fillRect(screenX - 30 * scale, screenY - h - 30 * scale, 60 * scale, 60 * scale);
-                }
-            } else {
-                ctx.fillStyle = 'rgba(255, 200, 100, 0.9)';
-                roundRect(screenX - w / 2 + 3 * scale, screenY - h + 3 * scale, 6 * scale, 4 * scale, 2 * scale); ctx.fill();
-                roundRect(screenX + w / 2 - 9 * scale, screenY - h + 3 * scale, 6 * scale, 4 * scale, 2 * scale); ctx.fill();
-            }
-
-            // 🛡️ Щит
-            if (isPlayer && shieldActive) {
-                const shieldGrad = ctx.createRadialGradient(screenX, screenY - h / 2, 0, screenX, screenY - h / 2, w);
-                shieldGrad.addColorStop(0, 'rgba(78, 204, 255, 0.05)');
-                shieldGrad.addColorStop(0.7, 'rgba(78, 204, 255, 0.3)');
-                shieldGrad.addColorStop(1, 'rgba(78, 204, 255, 0)');
-                ctx.fillStyle = shieldGrad;
-                ctx.beginPath();
-                ctx.arc(screenX, screenY - h / 2, w, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-
-        function drawCoin3D(coin) {
-            const depthY = coin.y;
-            if (depthY < 0 || depthY > 1.05) return;
-
-            const screenX = projectX(coin.x, depthY);
-            const screenY = projectY(depthY);
-            const scale = projectScale(depthY);
-            const wobble = Math.sin(coin.phase) * 0.3 + 1;
-            const r = coinR * scale * wobble;
-
-            if (r < 2) return;
-
-            // Свечение
-            const glow = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, r * 2);
-            glow.addColorStop(0, 'rgba(255,215,0,0.5)');
-            glow.addColorStop(1, 'rgba(255,215,0,0)');
-            ctx.fillStyle = glow;
-            ctx.beginPath();
-            ctx.arc(screenX, screenY, r * 2, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Монетка
-            const grad = ctx.createRadialGradient(screenX - r * 0.3, screenY - r * 0.3, 0, screenX, screenY, r);
-            grad.addColorStop(0, '#fff59d');
-            grad.addColorStop(0.7, '#ffd700');
-            grad.addColorStop(1, '#c9a300');
-            ctx.fillStyle = grad;
-            ctx.beginPath();
-            ctx.arc(screenX, screenY, r, 0, Math.PI * 2);
-            ctx.fill();
-
-            if (r > 6) {
-                ctx.strokeStyle = '#8a6d00';
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
-                ctx.fillStyle = '#8a6d00';
-                ctx.font = `bold ${Math.floor(12 * scale)}px sans-serif`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText('$', screenX, screenY + 1);
-            }
-        }
-
-        function drawObstacle3D(o) {
-            const depthY = o.y;
-            if (depthY < 0 || depthY > 1.05) return;
-
-            const screenX = projectX(o.x, depthY);
-            const screenY = projectY(depthY);
-            const scale = projectScale(depthY);
-
-            const w = 30 * scale;
-            const h = 30 * scale;
-
-            if (w < 3) return;
-
-            if (o.type === 'cone') {
-                ctx.fillStyle = '#ff6b00';
-                ctx.beginPath();
-                ctx.moveTo(screenX, screenY - h);
-                ctx.lineTo(screenX + w / 2, screenY);
-                ctx.lineTo(screenX - w / 2, screenY);
-                ctx.closePath();
-                ctx.fill();
-                ctx.fillStyle = '#fff';
-                ctx.fillRect(screenX - w / 4, screenY - h / 2, w / 2, 3 * scale);
-            } else if (o.type === 'pit') {
-                ctx.fillStyle = '#000';
-                ctx.beginPath();
-                ctx.ellipse(screenX, screenY, w / 2, h / 3, 0, 0, Math.PI * 2);
-                ctx.fill();
-            } else if (o.type === 'puddle') {
-                ctx.fillStyle = 'rgba(50, 100, 200, 0.6)';
-                ctx.beginPath();
-                ctx.ellipse(screenX, screenY, w / 2, h / 3, 0, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-
-        function drawRoadBonus3D(b) {
-            const depthY = b.y;
-            if (depthY < 0 || depthY > 1.05) return;
-
-            const screenX = projectX(b.x, depthY);
-            const screenY = projectY(depthY);
-            const scale = projectScale(depthY);
-            const wobble = Math.sin(b.phase) * 0.3 + 1;
-            const r = 18 * scale * wobble;
-
-            if (r < 3) return;
-
-            const icons = { boost: '⚡', magnet: '🧲', shield: '🛡️' };
-            const colors = { boost: '#00d2ff', magnet: '#e67e22', shield: '#4ecca3' };
-
-            // Свечение
-            const glow = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, r * 2);
-            glow.addColorStop(0, colors[b.type] + '80');
-            glow.addColorStop(1, colors[b.type] + '00');
-            ctx.fillStyle = glow;
-            ctx.beginPath();
-            ctx.arc(screenX, screenY, r * 2, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Круг
-            ctx.fillStyle = colors[b.type];
-            ctx.beginPath();
-            ctx.arc(screenX, screenY, r, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Иконка
-            if (r > 8) {
-                ctx.fillStyle = '#fff';
-                ctx.font = `bold ${Math.floor(20 * scale)}px sans-serif`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(icons[b.type], screenX, screenY + 1);
-            }
-        }
-
-        // ========== ОТРИСОВКА ДОРОГИ ==========
-        function drawRoad3D() {
-                   function drawRoad3D() {
-            // 🌌 НЕБО с градиентом
-            const skyGrad = ctx.createLinearGradient(0, 0, 0, HORIZON_Y);
-            skyGrad.addColorStop(0, currentMap.skyTop);
-            skyGrad.addColorStop(1, currentMap.skyBot);
-            ctx.fillStyle = skyGrad;
-            ctx.fillRect(0, 0, W, HORIZON_Y);
-
-            // ⭐ Звёзды (для ночной карты)
-            if (currentMap.id === 'night') {
-                ctx.fillStyle = 'rgba(255,255,255,0.8)';
-                for (let i = 0; i < 40; i++) {
-                    const sx = (i * 53) % W;
-                    const sy = (i * 31) % (HORIZON_Y - 20);
-                    const size = (i % 3) + 1;
-                    ctx.fillRect(sx, sy, size, size);
-                }
-            }
-
-            // 🌅 Горизонт (тонкая полоса)
-            ctx.fillStyle = currentMap.decorColor;
-            ctx.fillRect(0, HORIZON_Y - 2, W, 4);
-
-            // 🟫 Земля (обочины)
-            ctx.fillStyle = currentMap.decorColor;
-            ctx.fillRect(0, HORIZON_Y, W, H - HORIZON_Y);
-
-            // 🛣️ ДОРОГА (трапеция)
-            const roadTopLeft = W / 2 - ROAD_TOP_W / 2;
-            const roadTopRight = W / 2 + ROAD_TOP_W / 2;
-            const roadBotLeft = W / 2 - ROAD_BOT_W / 2;
-            const roadBotRight = W / 2 + ROAD_BOT_W / 2;
-
-            // Асфальт с градиентом (темнее у горизонта)
-            const roadGrad = ctx.createLinearGradient(0, HORIZON_Y, 0, H);
-            roadGrad.addColorStop(0, shadeColor(currentMap.roadColor, -20));
-            roadGrad.addColorStop(1, currentMap.roadColor);
-            ctx.fillStyle = roadGrad;
-            ctx.beginPath();
-            ctx.moveTo(roadTopLeft, HORIZON_Y);
-            ctx.lineTo(roadTopRight, HORIZON_Y);
-            ctx.lineTo(roadBotRight, H);
-            ctx.lineTo(roadBotLeft, H);
-            ctx.closePath();
-            ctx.fill();
-
-            // 🚧 Края дороги (белые линии)
-            ctx.strokeStyle = currentMap.roadEdge;
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(roadTopLeft, HORIZON_Y);
-            ctx.lineTo(roadBotLeft, H);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(roadTopRight, HORIZON_Y);
-            ctx.lineTo(roadBotRight, H);
-            ctx.stroke();
-
-            // 🟡 ПУНКТИРНАЯ РАЗМЕТКА (полосы уходят вдаль)
-            ctx.fillStyle = currentMap.lineColor;
-            const stripes = 12;
-            for (let i = 0; i < stripes; i++) {
-                const offset = (i * 0.15 + roadOffset * 0.003) % 1.2;
-                const y1 = offset;
-                const y2 = offset + 0.06;
-                if (y1 >= 1.2) continue;
-
-                const sy1 = HORIZON_Y + y1 * (H - HORIZON_Y);
-                const sy2 = HORIZON_Y + y2 * (H - HORIZON_Y);
-                if (sy1 < HORIZON_Y || sy1 > H) continue;
-                if (sy2 < HORIZON_Y || sy2 > H) continue;
-
-                const w1 = (ROAD_TOP_W + y1 * (ROAD_BOT_W - ROAD_TOP_W)) * 0.025;
-                const w2 = (ROAD_TOP_W + y2 * (ROAD_BOT_W - ROAD_TOP_W)) * 0.025;
-
-                ctx.beginPath();
-                ctx.moveTo(W / 2 - w1, sy1);
-                ctx.lineTo(W / 2 + w1, sy1);
-                ctx.lineTo(W / 2 + w2, sy2);
-                ctx.lineTo(W / 2 - w2, sy2);
-                ctx.closePath();
-                ctx.fill();
-            }
-
-            // 🌳 ДЕРЕВЬЯ / ЗДАНИЯ по бокам дороги
-            drawRoadsideDecor();
-        }
-
-        // Декор по бокам
-        function drawRoadsideDecor() {
-            const decorCount = 8;
-            for (let i = 0; i < decorCount; i++) {
-                const offset = (i * 0.15 + roadOffset * 0.003) % 1.2;
-                if (offset >= 1.2) continue;
-
-                const sy = HORIZON_Y + offset * (H - HORIZON_Y);
-                const scale = 0.15 + offset * 0.85;
-                const sideOffset = (ROAD_TOP_W + offset * (ROAD_BOT_W - ROAD_TOP_W)) / 2 + 15;
-
-                // Слева
-                const leftX = W / 2 - sideOffset;
-                drawDecorItem(leftX, sy, scale, i);
-
-                // Справа
-                const rightX = W / 2 + sideOffset;
-                drawDecorItem(rightX, sy, scale, i + 1);
-            }
-        }
-
-        function drawDecorItem(x, y, scale, seed) {
-            const size = 30 * scale;
-            if (size < 3) return;
-
-            if (currentMap.id === 'night' || currentMap.id === 'city') {
-                // 🏢 Здания
-                ctx.fillStyle = '#2a2a4a';
-                ctx.fillRect(x - size / 2, y - size * 1.5, size, size * 1.5);
-                ctx.fillStyle = 'rgba(255, 235, 100, 0.7)';
-                for (let w = 0; w < 3; w++) {
-                    for (let h = 0; h < 3; h++) {
-                        if ((seed + w + h) % 2 === 0) {
-                            ctx.fillRect(x - size / 2 + 3 * scale + w * 8 * scale, y - size * 1.5 + 5 * scale + h * 10 * scale, 4 * scale, 5 * scale);
-                        }
-                    }
-                }
-            } else if (currentMap.id === 'forest' || currentMap.id === 'snow') {
-                // 🌲 Деревья
-                ctx.fillStyle = '#3a2a1a';
-                ctx.fillRect(x - 2 * scale, y - size, 4 * scale, size);
-                ctx.fillStyle = currentMap.id === 'snow' ? '#2a5a2a' : '#1a5a1a';
-                ctx.beginPath();
-                ctx.moveTo(x, y - size * 2);
-                ctx.lineTo(x + size / 2, y - size * 0.5);
-                ctx.lineTo(x - size / 2, y - size * 0.5);
-                ctx.closePath();
-                ctx.fill();
-            } else if (currentMap.id === 'desert') {
-                // 🌵 Кактусы
-                ctx.fillStyle = '#2a6a2a';
-                ctx.fillRect(x - 3 * scale, y - size * 1.5, 6 * scale, size * 1.5);
-                ctx.fillRect(x - 10 * scale, y - size, 7 * scale, 4 * scale);
-                ctx.fillRect(x + 3 * scale, y - size * 1.2, 7 * scale, 4 * scale);
-            }
-        }
-
-        // ========== ПОЗДРАВЛЕНИЯ ==========
-        function drawCongrats() {
-            if (congratsTimer <= 0) return;
-
-            const alpha = Math.min(1, congratsTimer / 60);
-            ctx.save();
-            ctx.globalAlpha = alpha;
-
-            // Баннер
-            const bannerW = 300;
-            const bannerH = 80;
-            const bx = (W - bannerW) / 2;
-            const by = H / 2 - bannerH / 2;
-
-            const grad = ctx.createLinearGradient(bx, by, bx, by + bannerH);
-            grad.addColorStop(0, 'rgba(255, 215, 0, 0.95)');
-            grad.addColorStop(1, 'rgba(255, 140, 0, 0.95)');
-            ctx.fillStyle = grad;
-            roundRect(bx, by, bannerW, bannerH, 16);
-            ctx.fill();
-
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 3;
-            roundRect(bx, by, bannerW, bannerH, 16);
-            ctx.stroke();
-
-            // Текст
-            ctx.fillStyle = '#1a1a2e';
-            ctx.font = 'bold 32px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(congratsText, W / 2, H / 2 - 10);
-
-            ctx.font = 'bold 16px sans-serif';
-            ctx.fillStyle = '#1a1a2e';
-            ctx.fillText('+10 🪙  +100 очков', W / 2, H / 2 + 22);
-
-            ctx.restore();
-        }
-
-        // ========== ГЛАВНАЯ ОТРИСОВКА ==========
         function draw() {
-            if (!currentLevel || !currentMap) return;
+            if (!currentLevel) return;
 
-            // Дорога (3D)
-            drawRoad3D();
+            ctx.fillStyle = '#2d2d44';
+            ctx.fillRect(0, 0, W, H);
 
-            // Объекты (по глубине — сначала далёкие, потом близкие)
-            const allObjects = [
-                ...coins.map(c => ({ type: 'coin', obj: c, y: c.y })),
-                ...roadBonuses.map(b => ({ type: 'bonus', obj: b, y: b.y })),
-                ...obstacles.map(o => ({ type: 'obstacle', obj: o, y: o.y })),
-                ...enemies.map(e => ({ type: 'enemy', obj: e, y: e.y }))
-            ];
-            allObjects.sort((a, b) => a.y - b.y);
+            ctx.fillStyle = '#3a3a55';
+            ctx.fillRect(0, 0, roadLeft, H);
+            ctx.fillRect(roadRight, 0, W - roadRight, H);
 
-            allObjects.forEach(item => {
-                if (item.type === 'coin') drawCoin3D(item.obj);
-                else if (item.type === 'bonus') drawRoadBonus3D(item.obj);
-                else if (item.type === 'obstacle') drawObstacle3D(item.obj);
-                else if (item.type === 'enemy') {
-                    let w = enemyW, h = enemyH;
-                    if (item.obj.type === 'truck') { w = enemyW + 20; h = enemyH + 20; }
-                    else if (item.obj.type === 'moto') { w = enemyW - 14; h = enemyH - 10; }
-                    drawCar3D(item.obj.x, item.obj.y, item.obj.color, false, item.obj.type);
-                }
-            });
-
-            // Игрок (всегда поверх)
-            const myCar = getCarById(equippedCar);
-            drawCar3D(player.x, 0.95, myCar.color, true, 'player');
-
-            // Погода
-            drawWeather();
-
-            // Поздравление
-            drawCongrats();
-
-            // Пауза
-            if (pauseActive) {
-                ctx.fillStyle = 'rgba(0,0,0,0.7)';
-                ctx.fillRect(0, 0, W, H);
-                ctx.fillStyle = '#fff';
-                ctx.font = 'bold 36px sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText('ПАУЗА', W / 2, H / 2);
-                ctx.font = '16px sans-serif';
-                ctx.fillStyle = '#aaa';
-                ctx.fillText('Нажми П чтобы продолжить', W / 2, H / 2 + 40);
+            ctx.fillStyle = '#ffeb3b';
+            for (let y = -60 + roadOffset; y < H; y += 60) {
+                ctx.fillRect(W / 2 - 3, y, 6, 30);
             }
 
-            // Game over
+            ctx.fillStyle = '#e94560';
+            ctx.fillRect(roadLeft - 3, 0, 3, H);
+            ctx.fillRect(roadRight, 0, 3, H);
+
+            enemies.forEach(e => drawCar(e.x, e.y, enemyW, enemyH, e.color, false));
+            drawCar(player.x, player.y, playerW, playerH, '#4ecca3', true);
+
             if (gameOver) {
-                ctx.fillStyle = 'rgba(0,0,0,0.8)';
+                ctx.fillStyle = 'rgba(0,0,0,0.75)';
                 ctx.fillRect(0, 0, W, H);
+
                 ctx.fillStyle = '#e94560';
                 ctx.font = 'bold 42px sans-serif';
                 ctx.textAlign = 'center';
-                ctx.textBaseline = 'alphabetic';
-                ctx.fillText('АВАРИЯ!', W / 2, H / 2 - 80);
+                ctx.fillText('АВАРИЯ!', W / 2, H / 2 - 60);
+
                 ctx.fillStyle = 'white';
                 ctx.font = 'bold 26px sans-serif';
-                ctx.fillText('Очки: ' + Math.floor(score), W / 2, H / 2 - 30);
-                ctx.fillStyle = '#ffd700';
-                ctx.font = 'bold 18px sans-serif';
-                ctx.fillText('🪙 Собрано: ' + coinsCollected, W / 2, H / 2 + 5);
+                ctx.fillText('Очки: ' + Math.floor(score), W / 2, H / 2 - 10);
+
+                ctx.font = '16px sans-serif';
                 ctx.fillStyle = '#4ecca3';
-                ctx.font = 'bold 18px sans-serif';
-                ctx.fillText('💰 В копилке: ' + wallet, W / 2, H / 2 + 35);
+                ctx.fillText('Уровень: ' + currentLevel.name, W / 2, H / 2 + 25);
+
+                ctx.fillStyle = '#aaa';
+                ctx.fillText('ПРОБЕЛ — заново', W / 2, H / 2 + 65);
+                ctx.fillText('M — выбрать уровень', W / 2, H / 2 + 90);
             }
         }
 
@@ -2173,28 +345,25 @@
             draw();
             requestAnimationFrame(loop);
         }
-                    // ========== УПРАВЛЕНИЕ ==========
+
         document.addEventListener('keydown', (e) => {
-            const key = e.key.toLowerCase();
-            if (key === 'arrowleft' || key === 'a' || key === 'ф') keys && (keys.left = true);
-            if (key === 'arrowright' || key === 'd' || key === 'в') keys && (keys.right = true);
-            if (key === ' ' && gameOver && currentLevel) {
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys && (keys.left = true);
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys && (keys.right = true);
+            if (e.key === ' ' && gameOver && currentLevel) {
                 startGame(Object.keys(LEVELS).find(k => LEVELS[k] === currentLevel));
             }
-            if ((key === 'm' || key === 'ь') && gameOver) showMainMenu();
-            if (key === 'у' || key === 'e') activateBoost();
-            if (key === 'щ' || key === 'o') activateShield();
-            if (key === 'т' || key === 'n') activateTeleport();
-            if (key === 'п' || key === 'g') togglePause();
+            if ((e.key === 'm' || e.key === 'M') && gameOver) {
+                showMenu();
+            }
         });
         document.addEventListener('keyup', (e) => {
-            const key = e.key.toLowerCase();
-            if (key === 'arrowleft' || key === 'a' || key === 'ф') keys && (keys.left = false);
-            if (key === 'arrowright' || key === 'd' || key === 'в') keys && (keys.right = false);
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys && (keys.left = false);
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys && (keys.right = false);
         });
 
         const leftBtn = document.getElementById('leftBtn');
         const rightBtn = document.getElementById('rightBtn');
+
         function bindBtn(btn, dir) {
             btn.addEventListener('touchstart', (e) => { e.preventDefault(); if (keys) keys[dir] = true; });
             btn.addEventListener('touchend', (e) => { e.preventDefault(); if (keys) keys[dir] = false; });
@@ -2205,27 +374,14 @@
         bindBtn(leftBtn, 'left');
         bindBtn(rightBtn, 'right');
 
-        document.querySelectorAll('.menu-btn[data-level]').forEach(btn => {
+        // Клик по кнопкам уровней
+        document.querySelectorAll('.level-btn').forEach(btn => {
             btn.addEventListener('click', () => startGame(btn.dataset.level));
         });
 
-        // ========== СТАРТ ==========
-        applyUpgrades();
-        updateWalletUI();
-        updateTeleportBtn();
-        updatePlayerStats();
-        renderMaps();
-        document.getElementById('achCount').textContent = `${unlockedAchievements.length}/${ACHIEVEMENTS.length}`;
-        showMainMenu();
+        // Первый запуск — показываем меню
+        showMenu();
         loop();
-    </script>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script>
-        if (window.Telegram && window.Telegram.WebApp) {
-            document.body.classList.add('tg-mode');
-            window.Telegram.WebApp.expand();
-            window.Telegram.WebApp.ready();
-        }
     </script>
 </body>
 </html>
