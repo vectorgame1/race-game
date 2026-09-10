@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Гонки 2.0 🏎️</title>
+    <title>Гонки 3D 🏎️</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body {
@@ -35,6 +35,17 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+        }
+        body.tg-mode .game-wrap {
+            height: 100vh;
+            max-height: 100vh;
+            min-height: 0;
+        }
+        body.tg-mode canvas {
+            height: 100%;
+            flex: 1;
+            min-height: 0;
+            max-height: none;
         }
         .hud {
             display: flex;
@@ -79,7 +90,6 @@
             user-select: none;
             transition: background 0.2s;
         }
-        .btn:hover { background: #3db892; }
         .btn:active { transform: scale(0.97); }
         .abilities {
             display: flex;
@@ -112,7 +122,6 @@
             padding: 1px 3px;
             border-radius: 3px;
         }
-        .ability-btn:hover:not(:disabled) { border-color: #4ecca3; background: #3a3a55; }
         .ability-btn:disabled { opacity: 0.4; cursor: not-allowed; }
         .ability-btn.active {
             border-color: #ffd700;
@@ -304,7 +313,6 @@
         }
         .shop-item .buy-btn:disabled { background: #444; color: #888; cursor: not-allowed; }
         .shop-item .buy-btn.equip { background: #ffd700; color: #1a1a2e; }
-        /* Достижения */
         .achievement-item {
             width: 100%;
             max-width: 360px;
@@ -327,7 +335,6 @@
         .achievement-item .ach-name { font-weight: bold; font-size: 13px; }
         .achievement-item .ach-desc { font-size: 10px; color: #aaa; margin-top: 2px; }
         .achievement-item .ach-status { font-size: 18px; }
-        /* Кампания */
         .campaign-level {
             width: 100%;
             max-width: 360px;
@@ -349,7 +356,6 @@
         .campaign-level .cl-name { font-weight: bold; font-size: 13px; }
         .campaign-level .cl-task { font-size: 10px; color: #aaa; margin-top: 2px; }
         .campaign-level .cl-status { font-size: 18px; }
-        /* Прокачка */
         .upgrade-item {
             width: 100%;
             max-width: 360px;
@@ -423,9 +429,8 @@
         </div>
         <div class="hint">← → движение | У Т Щ П — способности</div>
 
-        <!-- Главное меню -->
         <div class="screen" id="mainMenu">
-            <h2>🏁 Гонки 2.0</h2>
+            <h2>🏁 Гонки 3D</h2>
             <div class="wallet">🪙 Копилка: <span id="walletMenu">0</span></div>
             <div class="player-stats" id="playerStats"></div>
             <div class="section-title">🗺️ Карта</div>
@@ -442,7 +447,6 @@
             <button class="menu-btn shop" id="openShopBtn"><span>🛒 Магазин</span><small>купить машину</small></button>
         </div>
 
-        <!-- Магазин -->
         <div class="screen hidden" id="shopMenu">
             <h2>🛒 Магазин</h2>
             <div class="wallet">🪙 Копилка: <span id="walletShop">0</span></div>
@@ -457,28 +461,24 @@
             <button class="menu-btn back" id="closeShopBtn" style="margin-top: 10px;"><span>← Назад</span></button>
         </div>
 
-        <!-- Кампания -->
         <div class="screen hidden" id="campaignMenu">
             <h2>🎮 Кампания</h2>
             <div id="campaignList"></div>
             <button class="menu-btn back" id="closeCampaignBtn" style="margin-top: 10px;"><span>← Назад</span></button>
         </div>
 
-        <!-- Достижения -->
         <div class="screen hidden" id="achievementsMenu">
             <h2>🏆 Достижения</h2>
             <div id="achievementsList"></div>
             <button class="menu-btn back" id="closeAchievementsBtn" style="margin-top: 10px;"><span>← Назад</span></button>
         </div>
 
-        <!-- Ежедневные -->
         <div class="screen hidden" id="dailyMenu">
             <h2>📅 Ежедневные задания</h2>
             <div id="dailyList"></div>
             <button class="menu-btn back" id="closeDailyBtn" style="margin-top: 10px;"><span>← Назад</span></button>
         </div>
 
-        <!-- Прокачка -->
         <div class="screen hidden" id="upgradeMenu">
             <h2>⚙️ Прокачка</h2>
             <div class="wallet">🪙 Копилка: <span id="walletUpgrade">0</span></div>
@@ -486,7 +486,6 @@
             <button class="menu-btn back" id="closeUpgradeBtn" style="margin-top: 10px;"><span>← Назад</span></button>
         </div>
 
-        <!-- Game Over -->
         <div class="screen hidden" id="gameOverScreen">
             <h2>💥 АВАРИЯ!</h2>
             <div class="wallet" id="gameOverStats"></div>
@@ -497,24 +496,24 @@
         <script>
         // ========== КАРТЫ ==========
         const MAPS = [
-            { id: 'city',   name: 'Город',   icon: '🌆', roadColor: '#3a3a55', roadEdge: '#e94560', lineColor: '#ffeb3b', bgColor: '#2d2d44', decorColor: '#4a4a66' },
-            { id: 'desert', name: 'Пустыня', icon: '🏜️', roadColor: '#8a6d3b', roadEdge: '#c9a300', lineColor: '#fff59d', bgColor: '#d4a76a', decorColor: '#b8894a' },
-            { id: 'night',  name: 'Ночная',  icon: '🌃', roadColor: '#1a1a2e', roadEdge: '#9b59b6', lineColor: '#fff',    bgColor: '#0a0a1a', decorColor: '#1f1f3a' },
-            { id: 'forest', name: 'Лес',     icon: '🌲', roadColor: '#2d4a2d', roadEdge: '#4ecca3', lineColor: '#fff59d', bgColor: '#1a3a1a', decorColor: '#2a5a2a' },
-            { id: 'snow',   name: 'Снег',    icon: '❄️', roadColor: '#c8d4e0', roadEdge: '#4ecca3', lineColor: '#fff',    bgColor: '#e8f0f8', decorColor: '#a8b8c8' }
+            { id: 'city',   name: 'Город',   icon: '🌆', skyTop: '#1a1a3e', skyBot: '#4a4a8a', roadColor: '#3a3a55', roadEdge: '#e94560', lineColor: '#ffeb3b', bgColor: '#2d2d44', decorColor: '#4a4a66' },
+            { id: 'desert', name: 'Пустыня', icon: '🏜️', skyTop: '#ff8c42', skyBot: '#ffd89b', roadColor: '#8a6d3b', roadEdge: '#c9a300', lineColor: '#fff59d', bgColor: '#d4a76a', decorColor: '#b8894a' },
+            { id: 'night',  name: 'Ночная',  icon: '🌃', skyTop: '#0a0a1a', skyBot: '#1a1a3a', roadColor: '#1a1a2e', roadEdge: '#9b59b6', lineColor: '#fff',    bgColor: '#0a0a1a', decorColor: '#1f1f3a' },
+            { id: 'forest', name: 'Лес',     icon: '🌲', skyTop: '#2d5a2d', skyBot: '#87ceeb', roadColor: '#2d4a2d', roadEdge: '#4ecca3', lineColor: '#fff59d', bgColor: '#1a3a1a', decorColor: '#2a5a2a' },
+            { id: 'snow',   name: 'Снег',    icon: '❄️', skyTop: '#a8c8e8', skyBot: '#e8f0f8', roadColor: '#c8d4e0', roadEdge: '#4ecca3', lineColor: '#fff',    bgColor: '#e8f0f8', decorColor: '#a8b8c8' }
         ];
 
-        // ========== МАШИНЫ ==========
+        // ========== МАШИНЫ (НОВЫЕ ЦЕНЫ — все до 100) ==========
         const CARS = [
             { id: 'green',     name: 'Обычная',    color: '#4ecca3', price: 0,   icon: '🚗', perk: 'Стандартная',     perkDesc: 'Без способностей' },
-            { id: 'police',    name: 'Полиция',    color: '#3498db', price: 30,  icon: '🚓', perk: 'Сирена',          perkDesc: 'Мигалка и звук' },
-            { id: 'fire',      name: 'Пожарная',   color: '#e94560', price: 50,  icon: '🚒', perk: 'Сбивает врагов',  perkDesc: 'Уничтожает врага' },
-            { id: 'taxi',      name: 'Такси',      color: '#f9a826', price: 40,  icon: '🚕', perk: 'x2 монеты',       perkDesc: 'Монеты вдвое' },
-            { id: 'ambulance', name: 'Скорая',     color: '#ffffff', price: 60,  icon: '🚑', perk: 'Спасает 1 раз',   perkDesc: 'Одна авария прощается' },
-            { id: 'formula',   name: 'Формула 1',  color: '#ff1744', price: 100, icon: '🏎️', perk: 'Турбо',           perkDesc: 'Быстрее на 20%' },
-            { id: 'jeep',      name: 'Джип',       color: '#8b4513', price: 80,  icon: '🚙', perk: 'Неуязвим',        perkDesc: 'Сбивает врагов' },
-            { id: 'race',      name: 'Гоночная',   color: '#9b59b6', price: 120, icon: '🏁', perk: 'Дрифт',           perkDesc: 'Резкие повороты' },
-            { id: 'minivan',   name: 'Минивэн',    color: '#16a085', price: 70,  icon: '🚐', perk: 'Широкий',         perkDesc: 'Больше, но медленнее' }
+            { id: 'police',    name: 'Полиция',    color: '#3498db', price: 15,  icon: '🚓', perk: 'Сирена',          perkDesc: 'Мигалка и звук' },
+            { id: 'taxi',      name: 'Такси',      color: '#f9a826', price: 20,  icon: '🚕', perk: 'x2 монеты',       perkDesc: 'Монеты вдвое' },
+            { id: 'fire',      name: 'Пожарная',   color: '#e94560', price: 25,  icon: '🚒', perk: 'Сбивает врагов',  perkDesc: 'Уничтожает врага' },
+            { id: 'ambulance', name: 'Скорая',     color: '#ffffff', price: 30,  icon: '🚑', perk: 'Спасает 1 раз',   perkDesc: 'Одна авария прощается' },
+            { id: 'minivan',   name: 'Минивэн',    color: '#16a085', price: 40,  icon: '🚐', perk: 'Широкий',         perkDesc: 'Больше, но медленнее' },
+            { id: 'jeep',      name: 'Джип',       color: '#8b4513', price: 50,  icon: '🚙', perk: 'Неуязвим',        perkDesc: 'Сбивает врагов' },
+            { id: 'formula',   name: 'Формула 1',  color: '#ff1744', price: 70,  icon: '🏎️', perk: 'Турбо',           perkDesc: 'Быстрее на 20%' },
+            { id: 'race',      name: 'Гоночная',   color: '#9b59b6', price: 100, icon: '🏁', perk: 'Дрифт',           perkDesc: 'Резкие повороты' }
         ];
 
         const BONUS_PRICES = { shield: 5, slow: 3, x2: 5 };
@@ -580,25 +579,25 @@
         };
 
         // ========== ДАННЫЕ ИГРОКА ==========
-        let wallet = parseInt(localStorage.getItem('r2_wallet') || '0');
-        let ownedCars = JSON.parse(localStorage.getItem('r2_ownedCars') || '["green"]');
-        let equippedCar = localStorage.getItem('r2_equippedCar') || 'green';
-        let selectedMap = localStorage.getItem('r2_selectedMap') || 'city';
+        let wallet = parseInt(localStorage.getItem('r3_wallet') || '0');
+        let ownedCars = JSON.parse(localStorage.getItem('r3_ownedCars') || '["green"]');
+        let equippedCar = localStorage.getItem('r3_equippedCar') || 'green';
+        let selectedMap = localStorage.getItem('r3_selectedMap') || 'city';
         let activeBonuses = { shield: false, slow: false, x2: false };
         let teleportActive = false;
 
-        let playerXP = parseInt(localStorage.getItem('r2_xp') || '0');
-        let playerLevel = parseInt(localStorage.getItem('r2_level') || '1');
-        let totalCoins = parseInt(localStorage.getItem('r2_totalCoins') || '0');
-        let totalGames = parseInt(localStorage.getItem('r2_totalGames') || '0');
-        let bestScore = parseInt(localStorage.getItem('r2_bestScore') || '0');
-        let playedMaps = JSON.parse(localStorage.getItem('r2_playedMaps') || '[]');
-        let unlockedAchievements = JSON.parse(localStorage.getItem('r2_achievements') || '[]');
-        let campaignProgress = parseInt(localStorage.getItem('r2_campaign') || '0');
-        let upgrades = JSON.parse(localStorage.getItem('r2_upgrades') || '{"engine":0,"tires":0,"magnet":0,"coinbonus":0,"shieldtime":0}');
+        let playerXP = parseInt(localStorage.getItem('r3_xp') || '0');
+        let playerLevel = parseInt(localStorage.getItem('r3_level') || '1');
+        let totalCoins = parseInt(localStorage.getItem('r3_totalCoins') || '0');
+        let totalGames = parseInt(localStorage.getItem('r3_totalGames') || '0');
+        let bestScore = parseInt(localStorage.getItem('r3_bestScore') || '0');
+        let playedMaps = JSON.parse(localStorage.getItem('r3_playedMaps') || '[]');
+        let unlockedAchievements = JSON.parse(localStorage.getItem('r3_achievements') || '[]');
+        let campaignProgress = parseInt(localStorage.getItem('r3_campaign') || '0');
+        let upgrades = JSON.parse(localStorage.getItem('r3_upgrades') || '{"engine":0,"tires":0,"magnet":0,"coinbonus":0,"shieldtime":0}');
 
         // Ежедневные задания
-        let dailyData = JSON.parse(localStorage.getItem('r2_daily') || 'null');
+        let dailyData = JSON.parse(localStorage.getItem('r3_daily') || 'null');
         const today = new Date().toDateString();
         if (!dailyData || dailyData.date !== today) {
             dailyData = {
@@ -610,24 +609,24 @@
                 ],
                 claimed: false
             };
-            localStorage.setItem('r2_daily', JSON.stringify(dailyData));
+            localStorage.setItem('r3_daily', JSON.stringify(dailyData));
         }
 
         function savePlayer() {
-            localStorage.setItem('r2_wallet', wallet);
-            localStorage.setItem('r2_ownedCars', JSON.stringify(ownedCars));
-            localStorage.setItem('r2_equippedCar', equippedCar);
-            localStorage.setItem('r2_selectedMap', selectedMap);
-            localStorage.setItem('r2_xp', playerXP);
-            localStorage.setItem('r2_level', playerLevel);
-            localStorage.setItem('r2_totalCoins', totalCoins);
-            localStorage.setItem('r2_totalGames', totalGames);
-            localStorage.setItem('r2_bestScore', bestScore);
-            localStorage.setItem('r2_playedMaps', JSON.stringify(playedMaps));
-            localStorage.setItem('r2_achievements', JSON.stringify(unlockedAchievements));
-            localStorage.setItem('r2_campaign', campaignProgress);
-            localStorage.setItem('r2_upgrades', JSON.stringify(upgrades));
-            localStorage.setItem('r2_daily', JSON.stringify(dailyData));
+            localStorage.setItem('r3_wallet', wallet);
+            localStorage.setItem('r3_ownedCars', JSON.stringify(ownedCars));
+            localStorage.setItem('r3_equippedCar', equippedCar);
+            localStorage.setItem('r3_selectedMap', selectedMap);
+            localStorage.setItem('r3_xp', playerXP);
+            localStorage.setItem('r3_level', playerLevel);
+            localStorage.setItem('r3_totalCoins', totalCoins);
+            localStorage.setItem('r3_totalGames', totalGames);
+            localStorage.setItem('r3_bestScore', bestScore);
+            localStorage.setItem('r3_playedMaps', JSON.stringify(playedMaps));
+            localStorage.setItem('r3_achievements', JSON.stringify(unlockedAchievements));
+            localStorage.setItem('r3_campaign', campaignProgress);
+            localStorage.setItem('r3_upgrades', JSON.stringify(upgrades));
+            localStorage.setItem('r3_daily', JSON.stringify(dailyData));
         }
 
         function updateWalletUI() {
@@ -641,10 +640,7 @@
         function getCarById(id) { return CARS.find(c => c.id === id) || CARS[0]; }
         function getMapById(id) { return MAPS.find(m => m.id === id) || MAPS[0]; }
 
-        // Уровень игрока = XP / 100 + 1
-        function calculateLevel() {
-            return Math.floor(playerXP / 100) + 1;
-        }
+        function calculateLevel() { return Math.floor(playerXP / 100) + 1; }
         function getPlayerRank() {
             const lvl = playerLevel;
             if (lvl >= 10) return '👑 Легенда';
@@ -654,14 +650,7 @@
             return '🚗 Новичок';
         }
         function checkAchievements() {
-            const stats = {
-                totalCoins: totalCoins,
-                bestScore: bestScore,
-                cars: ownedCars.length,
-                games: totalGames,
-                maps: playedMaps.length,
-                playerLevel: playerLevel
-            };
+            const stats = { totalCoins, bestScore, cars: ownedCars.length, games: totalGames, maps: playedMaps.length, playerLevel };
             let newUnlocked = false;
             ACHIEVEMENTS.forEach(ach => {
                 if (!unlockedAchievements.includes(ach.id) && ach.check(stats)) {
@@ -670,24 +659,20 @@
                     newUnlocked = true;
                 }
             });
-            if (newUnlocked) {
-                savePlayer();
-                updateWalletUI();
-            }
+            if (newUnlocked) { savePlayer(); updateWalletUI(); }
             return newUnlocked;
         }
         function updatePlayerLevel() {
             const newLevel = calculateLevel();
-            if (newLevel > playerLevel) {
-                playerLevel = newLevel;
-                savePlayer();
-            }
+            if (newLevel > playerLevel) { playerLevel = newLevel; savePlayer(); }
         }
                     // ========== ЗВУКИ ==========
-        let soundEnabled = localStorage.getItem('r2_sound') === 'on';
+        let soundEnabled = localStorage.getItem('r3_sound') === 'on';
         let audioCtx = null;
         let engineOsc = null;
         let engineGain = null;
+        let musicInterval = null;
+        let musicPlaying = false;
 
         function initAudio() {
             if (!audioCtx) {
@@ -717,22 +702,72 @@
         function soundBoost() { playTone(400, 0.1, 'sawtooth', 0.12, 0); playTone(600, 0.1, 'sawtooth', 0.12, 0.1); playTone(900, 0.2, 'sawtooth', 0.12, 0.2); }
         function soundTeleport() { playTone(200, 0.1, 'square', 0.1, 0); playTone(500, 0.1, 'square', 0.1, 0.1); playTone(1200, 0.3, 'square', 0.1, 0.2); }
         function soundAchievement() { playTone(659, 0.15, 'square', 0.15, 0); playTone(880, 0.15, 'square', 0.15, 0.15); playTone(1318, 0.3, 'square', 0.15, 0.3); }
+        function soundCheat() { playTone(523, 0.1, 'square', 0.15, 0); playTone(659, 0.1, 'square', 0.15, 0.1); playTone(784, 0.1, 'square', 0.15, 0.2); playTone(1046, 0.2, 'square', 0.15, 0.3); }
 
+        // 🎉 ПОЗДРАВЛЕНИЕ каждые 500 м
+        function soundCongrats() {
+            playTone(659, 0.12, 'square', 0.15, 0);
+            playTone(784, 0.12, 'square', 0.15, 0.12);
+            playTone(1046, 0.12, 'square', 0.15, 0.24);
+            playTone(1318, 0.25, 'square', 0.15, 0.36);
+        }
+
+        // 💥 НОВЫЙ ЗВУК АВАРИИ — удар + скрежет металла + стекло
         function soundCrash() {
             if (!soundEnabled || !audioCtx) return;
-            const bufferSize = audioCtx.sampleRate * 0.4;
+
+            // 1. Низкий удар (бас)
+            const bassOsc = audioCtx.createOscillator();
+            const bassGain = audioCtx.createGain();
+            bassOsc.type = 'sine';
+            bassOsc.frequency.setValueAtTime(120, audioCtx.currentTime);
+            bassOsc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.5);
+            bassGain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+            bassGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
+            bassOsc.connect(bassGain);
+            bassGain.connect(audioCtx.destination);
+            bassOsc.start();
+            bassOsc.stop(audioCtx.currentTime + 0.6);
+
+            // 2. Шум удара (металлический)
+            const bufferSize = audioCtx.sampleRate * 0.5;
             const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
             const data = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 2);
+            }
             const noise = audioCtx.createBufferSource();
             noise.buffer = buffer;
+            const noiseFilter = audioCtx.createBiquadFilter();
+            noiseFilter.type = 'bandpass';
+            noiseFilter.frequency.value = 2000;
+            noiseFilter.Q.value = 1.5;
             const noiseGain = audioCtx.createGain();
-            noiseGain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-            noiseGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
-            noise.connect(noiseGain);
+            noiseGain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+            noiseGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+            noise.connect(noiseFilter);
+            noiseFilter.connect(noiseGain);
             noiseGain.connect(audioCtx.destination);
             noise.start();
-            playTone(80, 0.5, 'sawtooth', 0.2, 0);
+
+            // 3. Скрежет металла (низкий sawtooth)
+            const scrapeOsc = audioCtx.createOscillator();
+            const scrapeGain = audioCtx.createGain();
+            scrapeOsc.type = 'sawtooth';
+            scrapeOsc.frequency.setValueAtTime(80, audioCtx.currentTime + 0.1);
+            scrapeOsc.frequency.linearRampToValueAtTime(40, audioCtx.currentTime + 0.5);
+            scrapeGain.gain.setValueAtTime(0.001, audioCtx.currentTime);
+            scrapeGain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.1);
+            scrapeGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
+            scrapeOsc.connect(scrapeGain);
+            scrapeGain.connect(audioCtx.destination);
+            scrapeOsc.start(audioCtx.currentTime + 0.1);
+            scrapeOsc.stop(audioCtx.currentTime + 0.6);
+
+            // 4. Стекло (высокий короткий "дзынь")
+            for (let i = 0; i < 5; i++) {
+                playTone(3000 + Math.random() * 3000, 0.08, 'triangle', 0.08, 0.2 + Math.random() * 0.3);
+            }
         }
 
         function startEngine() {
@@ -753,18 +788,77 @@
             if (engineOsc && currentLevel) engineOsc.frequency.value = 60 + speed * 15;
         }
 
+        // ========== 🎵 ФОНОВАЯ МУЗЫКА ==========
+        // Простая электронная мелодия из нот
+        const MUSIC_NOTES = [
+            440, 523, 659, 523, 440, 392, 440, 523,   // Фаза 1
+            587, 659, 784, 659, 587, 523, 587, 659,   // Фаза 2
+            440, 523, 659, 784, 880, 784, 659, 523,   // Фаза 3
+            392, 440, 523, 659, 523, 440, 392, 330    // Фаза 4
+        ];
+
+        function playMusicNote(index) {
+            if (!soundEnabled || !audioCtx || !musicPlaying) return;
+            const freq = MUSIC_NOTES[index % MUSIC_NOTES.length];
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.25);
+
+            // Басовая нота (на каждой 4-й)
+            if (index % 4 === 0) {
+                const bassOsc = audioCtx.createOscillator();
+                const bassGain = audioCtx.createGain();
+                bassOsc.type = 'sine';
+                bassOsc.frequency.value = freq / 4;
+                bassGain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+                bassGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+                bassOsc.connect(bassGain);
+                bassGain.connect(audioCtx.destination);
+                bassOsc.start();
+                bassOsc.stop(audioCtx.currentTime + 0.4);
+            }
+        }
+
+        function startMusic() {
+            if (musicPlaying || !soundEnabled) return;
+            musicPlaying = true;
+            let noteIndex = 0;
+            musicInterval = setInterval(() => {
+                if (!musicPlaying || !soundEnabled) return;
+                playMusicNote(noteIndex);
+                noteIndex++;
+            }, 280);
+        }
+
+        function stopMusic() {
+            musicPlaying = false;
+            if (musicInterval) { clearInterval(musicInterval); musicInterval = null; }
+        }
+
+        // ========== КНОПКА ЗВУКА ==========
         const soundBtn = document.getElementById('soundBtn');
         soundBtn.addEventListener('click', () => {
             initAudio();
             soundEnabled = !soundEnabled;
-            localStorage.setItem('r2_sound', soundEnabled ? 'on' : 'off');
+            localStorage.setItem('r3_sound', soundEnabled ? 'on' : 'off');
             updateSoundBtn();
             if (soundEnabled) {
                 if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
                 soundStart();
-                if (currentLevel && !gameOver) startEngine();
+                if (currentLevel && !gameOver) {
+                    startEngine();
+                    startMusic();
+                }
             } else {
                 stopEngine();
+                stopMusic();
             }
         });
         function updateSoundBtn() {
@@ -788,7 +882,7 @@
         const upgradeMenuEl = document.getElementById('upgradeMenu');
         const gameOverScreenEl = document.getElementById('gameOverScreen');
 
-        let best = parseInt(localStorage.getItem('r2_best') || '0');
+        let best = parseInt(localStorage.getItem('r3_best') || '0');
 
         let currentLevel = null;
         let currentMap = null;
@@ -804,9 +898,26 @@
         let coinBonusMultiplier = 1;
         let shieldDuration = 600;
 
+        // 🎉 Поздравления
+        let milestone = 0;               // последний пройденный рубеж (500, 1000, 1500...)
+        let congratsText = '';           // текст поздравления
+        let congratsTimer = 0;           // таймер показа
+
         const playerW = 44, playerH = 78, enemyW = 44, enemyH = 78, coinR = 12;
 
-        // ========== МАГАЗИН ==========
+        // ========== 🔑 СЕКРЕТНЫЙ ЧИТ-КОД ==========
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.shiftKey && (e.key === 'M' || e.key === 'm' || e.key === 'ь')) {
+                e.preventDefault();
+                wallet += 1000;
+                savePlayer();
+                updateWalletUI();
+                soundCheat();
+                congratsText = '🔑 +1000 МОНЕТ!';
+                congratsTimer = 180;
+            }
+        });
+                    // ========== МАГАЗИН ==========
         function renderShop() {
             const carsList = document.getElementById('carsList');
             carsList.innerHTML = CARS.map(car => {
@@ -930,7 +1041,7 @@
                         <div class="cl-num">${lvl.id}</div>
                         <div class="cl-info">
                             <div class="cl-name">${lvl.name}</div>
-                            <div class="cl-task">${lvl.task} | Награда: ${lvl.reward} 🪙</div>
+                            <div class="cl-task">${lvl.task} | +${lvl.reward} 🪙</div>
                         </div>
                         <div class="cl-status">${status}</div>
                     </div>`;
@@ -1110,7 +1221,7 @@
             roadLeft = roadMargin;
             roadRight = W - roadMargin;
 
-            player = { x: W / 2 - playerW / 2, y: H - playerH - 20 };
+            player = { x: W / 2, y: H - 100 };  // центр по X, ближе к низу
             enemies = [];
             coins = [];
             obstacles = [];
@@ -1144,13 +1255,17 @@
             else weather = 'fog';
             weatherTimer = 600;
 
+            // Поздравления
+            milestone = 0;
+            congratsText = '';
+            congratsTimer = 0;
+
             const car = getCarById(equippedCar);
             carPerk = car.perk;
 
             if (car.id === 'formula') speed *= 1.2;
             if (car.id === 'minivan') speed *= 0.85;
 
-            // Прокачка двигателя
             speed *= 1 + (upgrades.engine || 0) * 0.05;
 
             mainMenuEl.classList.add('hidden');
@@ -1164,14 +1279,16 @@
 
             if (soundEnabled) {
                 stopEngine();
+                stopMusic();
                 soundStart();
                 if (car.id === 'police') setTimeout(soundSiren, 600);
-                setTimeout(() => startEngine(), 500);
+                setTimeout(() => { startEngine(); startMusic(); }, 500);
             }
         }
 
         function showMainMenu() {
             stopEngine();
+            stopMusic();
             mainMenuEl.classList.remove('hidden');
             shopMenuEl.classList.add('hidden');
             campaignMenuEl.classList.add('hidden');
@@ -1238,7 +1355,6 @@
         function activateShield() {
             if (shieldActive || gameOver || !currentLevel) return;
             shieldActive = true;
-            slowTimer = shieldDuration;
             soundPurchase();
             updateAbilities();
         }
@@ -1260,9 +1376,10 @@
             if (pauseActive) {
                 pauseBtn.classList.add('active');
                 stopEngine();
+                stopMusic();
             } else {
                 pauseBtn.classList.remove('active');
-                if (soundEnabled) startEngine();
+                if (soundEnabled) { startEngine(); startMusic(); }
             }
         }
 
@@ -1280,14 +1397,14 @@
             showMainMenu();
         });
 
-        // ========== СПАВН ==========
+        // ========== СПАВН (с 3D-координатами) ==========
         function spawnEnemy() {
-            const x = roadLeft + Math.random() * (roadRight - roadLeft - enemyW);
+            const x = 30 + Math.random() * (W - 60);
             const colors = ['#e94560', '#f9a826', '#9b59b6', '#3498db', '#e67e22'];
             const types = ['car', 'car', 'car', 'truck', 'moto'];
             enemies.push({
                 x: x,
-                y: -enemyH,
+                y: 0,           // Y на дороге (глубина)
                 color: colors[Math.floor(Math.random() * colors.length)],
                 speed: currentLevel.enemySpeedMin + Math.random() * (currentLevel.enemySpeedMax - currentLevel.enemySpeedMin),
                 type: types[Math.floor(Math.random() * types.length)]
@@ -1295,34 +1412,232 @@
         }
 
         function spawnCoin() {
-            const x = roadLeft + coinR + Math.random() * (roadRight - roadLeft - coinR * 2);
-            coins.push({ x: x, y: -coinR * 2, phase: Math.random() * Math.PI * 2 });
+            const x = 30 + Math.random() * (W - 60);
+            coins.push({ x: x, y: 0, phase: Math.random() * Math.PI * 2 });
         }
 
         function spawnObstacle() {
-            const x = roadLeft + 20 + Math.random() * (roadRight - roadLeft - 40);
+            const x = 40 + Math.random() * (W - 80);
             const types = ['cone', 'pit', 'puddle'];
-            obstacles.push({
-                x: x,
-                y: -20,
-                type: types[Math.floor(Math.random() * types.length)],
-                w: 30,
-                h: 30
-            });
+            obstacles.push({ x: x, y: 0, type: types[Math.floor(Math.random() * types.length)] });
         }
 
         function spawnRoadBonus() {
-            const x = roadLeft + 30 + Math.random() * (roadRight - roadLeft - 60);
+            const x = 40 + Math.random() * (W - 80);
             const types = ['boost', 'magnet', 'shield'];
-            roadBonuses.push({
-                x: x,
-                y: -30,
-                type: types[Math.floor(Math.random() * types.length)],
-                phase: 0
-            });
+            roadBonuses.push({ x: x, y: 0, type: types[Math.floor(Math.random() * types.length)], phase: 0 });
         }
 
-        // ========== ОТРИСОВКА ==========
+        // ========== ОБНОВЛЕНИЕ ==========
+        function update() {
+            if (gameOver || !currentLevel || pauseActive) return;
+
+            // Движение игрока (X — по горизонтали)
+            const playerSpeed = 5 * (1 + (upgrades.tires || 0) * 0.05);
+            if (keys.left) player.x -= playerSpeed;
+            if (keys.right) player.x += playerSpeed;
+            player.x = Math.max(40, Math.min(W - 40, player.x));
+
+            roadOffset = (roadOffset + speed) % 60;
+
+            if (slowActive) { slowTimer -= 1; if (slowTimer <= 0) slowActive = false; }
+            if (boostActive) { boostTimer -= 1; if (boostTimer <= 0) { boostActive = false; updateAbilities(); } }
+
+            // Погода
+            weatherTimer -= 1;
+            if (weatherTimer <= 0) {
+                const roll = Math.random();
+                if (roll < 0.6) weather = 'clear';
+                else if (roll < 0.75) weather = 'rain';
+                else if (roll < 0.9) weather = 'snow';
+                else weather = 'fog';
+                weatherTimer = 600;
+            }
+
+            const boostFactor = boostActive ? 1.8 : 1;
+
+            spawnTimer += speed * boostFactor;
+            if (spawnTimer > currentLevel.spawnRate) { spawnEnemy(); spawnTimer = 0; }
+
+            coinTimer -= 1;
+            if (coinTimer <= 0) { spawnCoin(); coinTimer = 120 + Math.random() * 120; }
+
+            obstacleTimer -= 1;
+            if (obstacleTimer <= 0) { spawnObstacle(); obstacleTimer = 200 + Math.random() * 200; }
+
+            roadBonusTimer -= 1;
+            if (roadBonusTimer <= 0) { spawnRoadBonus(); roadBonusTimer = 400 + Math.random() * 300; }
+
+            // Враги (Y — глубина, увеличивается)
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                enemies[i].y += (speed + enemies[i].speed) * boostFactor;
+
+                // Столкновение: если враг на глубине 0.8–1.0 и по X близко к игроку
+                if (enemies[i].y > 0.8 && enemies[i].y < 1.05) {
+                    const dx = Math.abs(enemies[i].x - player.x);
+                    if (dx < 40) {
+                        const car = getCarById(equippedCar);
+                        if (shieldActive) {
+                            enemies.splice(i, 1); shieldActive = false;
+                            playTone(200, 0.3, 'sawtooth', 0.15, 0);
+                            updateAbilities();
+                            continue;
+                        }
+                        if (car.id === 'jeep' || car.id === 'fire') {
+                            enemies.splice(i, 1); score += 20; soundPoint();
+                            continue;
+                        }
+                        if (car.id === 'ambulance' && !ambulanceUsed) {
+                            enemies.splice(i, 1); ambulanceUsed = true;
+                            playTone(400, 0.3, 'sine', 0.15, 0);
+                            continue;
+                        }
+                        crashGame();
+                        return;
+                    }
+                }
+
+                if (enemies[i] && enemies[i].y > 1.2) {
+                    enemies.splice(i, 1);
+                    score += 10 * scoreMultiplier;
+                    scoreEl.textContent = Math.floor(score);
+                    soundPoint();
+                }
+            }
+
+            // Монеты
+            const car = getCarById(equippedCar);
+            const coinMultiplier = (car.id === 'taxi' ? 2 : 1) * coinBonusMultiplier;
+            for (let i = coins.length - 1; i >= 0; i--) {
+                coins[i].y += speed * boostFactor;
+                coins[i].phase += 0.15;
+                if (coins[i].y > 0.8 && coins[i].y < 1.05) {
+                    const dx = Math.abs(coins[i].x - player.x);
+                    if (dx < 45 * magnetRange) {
+                        coins.splice(i, 1);
+                        wallet += coinMultiplier;
+                        coinsCollected += 1;
+                        totalCoins += 1;
+                        savePlayer(); updateWalletUI(); soundCoin();
+                        continue;
+                    }
+                }
+                if (coins[i].y > 1.2) coins.splice(i, 1);
+            }
+
+            // Препятствия
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                obstacles[i].y += speed * boostFactor;
+                if (obstacles[i].y > 0.8 && obstacles[i].y < 1.05) {
+                    const dx = Math.abs(obstacles[i].x - player.x);
+                    if (dx < 35) {
+                        if (obstacles[i].type === 'puddle') {
+                            speed = Math.max(currentLevel.startSpeed, speed - 0.1);
+                            obstacles.splice(i, 1);
+                            continue;
+                        }
+                        if (shieldActive) {
+                            obstacles.splice(i, 1); shieldActive = false;
+                            updateAbilities();
+                            continue;
+                        }
+                        if (car.id === 'jeep') {
+                            obstacles.splice(i, 1);
+                            continue;
+                        }
+                        crashGame();
+                        return;
+                    }
+                }
+                if (obstacles[i] && obstacles[i].y > 1.2) obstacles.splice(i, 1);
+            }
+
+            // Бонусы на дороге
+            for (let i = roadBonuses.length - 1; i >= 0; i--) {
+                roadBonuses[i].y += speed * boostFactor;
+                roadBonuses[i].phase += 0.15;
+                if (roadBonuses[i].y > 0.8 && roadBonuses[i].y < 1.05) {
+                    const dx = Math.abs(roadBonuses[i].x - player.x);
+                    if (dx < 45) {
+                        const type = roadBonuses[i].type;
+                        if (type === 'boost') { boostActive = true; boostTimer = 120; soundBoost(); }
+                        else if (type === 'magnet') {
+                            magnetRange = 3;
+                            setTimeout(() => { magnetRange = 1 + (upgrades.magnet || 0) * 0.1; }, 5000);
+                            soundCoin();
+                        }
+                        else if (type === 'shield') { shieldActive = true; soundPurchase(); updateAbilities(); }
+                        roadBonuses.splice(i, 1);
+                        continue;
+                    }
+                }
+                if (roadBonuses[i] && roadBonuses[i].y > 1.2) roadBonuses.splice(i, 1);
+            }
+
+            // Скорость и очки
+            speed += currentLevel.speedRamp;
+            const oldScore = Math.floor(score / 1000);
+            score += speed * 0.05 * scoreMultiplier;
+            const newScore = Math.floor(score / 1000);
+            if (newScore > oldScore) { wallet += 10; savePlayer(); updateWalletUI(); }
+            scoreEl.textContent = Math.floor(score);
+            updateEngine();
+
+            // 🎉 ПОЗДРАВЛЕНИЯ каждые 500 м (очков)
+            const currentMeters = Math.floor(score / 500) * 500;
+            if (currentMeters > milestone && currentMeters >= 500) {
+                milestone = currentMeters;
+                congratsText = `🎉 ${currentMeters} М!`;
+                congratsTimer = 180;
+                wallet += 10;
+                score += 100;
+                savePlayer(); updateWalletUI();
+                soundCongrats();
+            }
+            if (congratsTimer > 0) congratsTimer -= 1;
+        }
+
+        function crashGame() {
+            gameOver = true;
+            stopEngine();
+            stopMusic();
+            soundCrash();
+
+            totalGames += 1;
+            const finalScore = Math.floor(score);
+            if (finalScore > bestScore) bestScore = finalScore;
+            if (finalScore > best) { best = finalScore; localStorage.setItem('r3_best', best); }
+            if (!playedMaps.includes(selectedMap)) playedMaps.push(selectedMap);
+
+            dailyData.tasks.forEach(t => {
+                if (t.done) return;
+                if (t.id === 'd_coins') t.progress += coinsCollected;
+                if (t.id === 'd_score') t.progress = Math.max(t.progress, finalScore);
+                if (t.id === 'd_games') t.progress += 1;
+                if (t.progress >= t.goal) t.done = true;
+            });
+
+            if (currentCampaignLevel) {
+                const done = currentCampaignLevel.type === 'coins'
+                    ? coinsCollected >= currentCampaignLevel.goal
+                    : finalScore >= currentCampaignLevel.goal;
+                if (done && campaignProgress < currentCampaignLevel.id) {
+                    campaignProgress = currentCampaignLevel.id;
+                    wallet += currentCampaignLevel.reward;
+                    soundAchievement();
+                }
+            }
+
+            playerXP += Math.floor(finalScore / 100);
+            updatePlayerLevel();
+
+            checkAchievements();
+            savePlayer();
+            updateWalletUI();
+
+            showGameOver();
+        }
+                    // ========== ОТРИСОВКА ==========
         function roundRect(x, y, w, h, r) {
             ctx.beginPath();
             ctx.moveTo(x + r, y);
@@ -1347,432 +1662,416 @@
             return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
         }
 
-        function drawCar(x, y, w, h, color, isPlayer) {
+        // ========== 3D-ПРОЕКЦИЯ ==========
+        // y = 0 → далеко (у горизонта), y = 1 → близко (внизу)
+        const HORIZON_Y = 180;      // где горизонт на канвасе
+        const ROAD_TOP_W = 60;      // ширина дороги у горизонта
+        const ROAD_BOT_W = 320;     // ширина дороги внизу
+
+        function projectY(y) {
+            // y от 0 до 1 → экранный Y от HORIZON_Y до H
+            return HORIZON_Y + y * (H - HORIZON_Y);
+        }
+
+        function projectRoadWidth(y) {
+            // ширина дороги на глубине y
+            return ROAD_TOP_W + y * (ROAD_BOT_W - ROAD_TOP_W);
+        }
+
+        function projectX(worldX, y) {
+            // worldX от 0 до W (мировые координаты) → экранный X
+            const roadW = projectRoadWidth(y);
+            const centerX = W / 2;
+            const offset = (worldX - W / 2) / W;   // -0.5 .. 0.5
+            return centerX + offset * roadW;
+        }
+
+        function projectScale(y) {
+            // масштаб объекта на глубине y
+            return 0.15 + y * 0.85;
+        }
+
+        // ========== ОТРИСОВКА МАШИНЫ 3D ==========
+        function drawCar3D(worldX, depthY, color, isPlayer, carType) {
+            if (depthY < 0 || depthY > 1.05) return;
+
+            const screenX = projectX(worldX, depthY);
+            const screenY = projectY(depthY);
+            const scale = projectScale(depthY);
+
+            const w = playerW * scale;
+            const h = playerH * scale;
+
+            // Пропускаем, если слишком далеко/маленький
+            if (w < 4) return;
+
+            // Тень
             ctx.fillStyle = 'rgba(0,0,0,0.35)';
-            roundRect(x + 3, y + 4, w, h, 8); ctx.fill();
+            roundRect(screenX - w / 2 + 3, screenY - h + 4, w, h, 6 * scale);
+            ctx.fill();
 
+            // Колёса
             ctx.fillStyle = '#1a1a1a';
-            roundRect(x - 3, y + 12, 6, 16, 3); ctx.fill();
-            roundRect(x + w - 3, y + 12, 6, 16, 3); ctx.fill();
-            roundRect(x - 3, y + h - 28, 6, 16, 3); ctx.fill();
-            roundRect(x + w - 3, y + h - 28, 6, 16, 3); ctx.fill();
+            const wheelW = 5 * scale, wheelH = 12 * scale;
+            roundRect(screenX - w / 2 - wheelW / 2, screenY - h + h * 0.2, wheelW, wheelH, 2 * scale); ctx.fill();
+            roundRect(screenX + w / 2 - wheelW / 2, screenY - h + h * 0.2, wheelW, wheelH, 2 * scale); ctx.fill();
+            roundRect(screenX - w / 2 - wheelW / 2, screenY - h * 0.35, wheelW, wheelH, 2 * scale); ctx.fill();
+            roundRect(screenX + w / 2 - wheelW / 2, screenY - h * 0.35, wheelW, wheelH, 2 * scale); ctx.fill();
 
-            const grad = ctx.createLinearGradient(x, y, x + w, y);
+            // Корпус
+            const grad = ctx.createLinearGradient(screenX - w / 2, 0, screenX + w / 2, 0);
             grad.addColorStop(0, shadeColor(color, -30));
             grad.addColorStop(0.5, color);
             grad.addColorStop(1, shadeColor(color, -30));
             ctx.fillStyle = grad;
-            roundRect(x, y, w, h, 10); ctx.fill();
+            roundRect(screenX - w / 2, screenY - h, w, h, 6 * scale);
+            ctx.fill();
 
+            // Заднее стекло
+            ctx.fillStyle = 'rgba(120,200,255,0.6)';
+            roundRect(screenX - w / 2 + 3 * scale, screenY - h + 4 * scale, w - 6 * scale, h * 0.25, 3 * scale);
+            ctx.fill();
+
+            // Фары задние (у игрока — красные, у врагов — видны)
+            if (isPlayer) {
+                ctx.fillStyle = '#ff1744';
+                roundRect(screenX - w / 2 + 2 * scale, screenY - 6 * scale, 8 * scale, 4 * scale, 1 * scale); ctx.fill();
+                roundRect(screenX + w / 2 - 10 * scale, screenY - 6 * scale, 8 * scale, 4 * scale, 1 * scale); ctx.fill();
+
+                // Свечение
+                const glow = ctx.createRadialGradient(screenX - w / 2 + 6 * scale, screenY - 4 * scale, 0, screenX - w / 2 + 6 * scale, screenY - 4 * scale, 20 * scale);
+                glow.addColorStop(0, 'rgba(255, 23, 68, 0.4)');
+                glow.addColorStop(1, 'rgba(255, 23, 68, 0)');
+                ctx.fillStyle = glow;
+                ctx.fillRect(screenX - w / 2 - 20 * scale, screenY - 20 * scale, 40 * scale, 40 * scale);
+
+                const glow2 = ctx.createRadialGradient(screenX + w / 2 - 6 * scale, screenY - 4 * scale, 0, screenX + w / 2 - 6 * scale, screenY - 4 * scale, 20 * scale);
+                glow2.addColorStop(0, 'rgba(255, 23, 68, 0.4)');
+                glow2.addColorStop(1, 'rgba(255, 23, 68, 0)');
+                ctx.fillStyle = glow2;
+                ctx.fillRect(screenX + w / 2 - 20 * scale, screenY - 20 * scale, 40 * scale, 40 * scale);
+
+                // Полицейская мигалка
+                if (carPerk === 'Сирена') {
+                    const flash = Math.floor(Date.now() / 200) % 2;
+                    ctx.fillStyle = flash === 0 ? '#ff1744' : '#2979ff';
+                    roundRect(screenX - 6 * scale, screenY - h - 4 * scale, 12 * scale, 4 * scale, 2 * scale);
+                    ctx.fill();
+                }
+            } else {
+                // У врагов — фары спереди (видны как маленькие точки)
+                ctx.fillStyle = '#ff5252';
+                roundRect(screenX - w / 2 + 2 * scale, screenY - h + 2 * scale, 5 * scale, 3 * scale, 1 * scale); ctx.fill();
+                roundRect(screenX + w / 2 - 7 * scale, screenY - h + 2 * scale, 5 * scale, 3 * scale, 1 * scale); ctx.fill();
+            }
+
+            // Щит
             if (isPlayer && shieldActive) {
-                const shieldGrad = ctx.createRadialGradient(x + w/2, y + h/2, 0, x + w/2, y + h/2, w);
+                const shieldGrad = ctx.createRadialGradient(screenX, screenY - h / 2, 0, screenX, screenY - h / 2, w);
                 shieldGrad.addColorStop(0, 'rgba(78, 204, 255, 0.05)');
                 shieldGrad.addColorStop(0.7, 'rgba(78, 204, 255, 0.25)');
                 shieldGrad.addColorStop(1, 'rgba(78, 204, 255, 0)');
                 ctx.fillStyle = shieldGrad;
                 ctx.beginPath();
-                ctx.arc(x + w/2, y + h/2, w, 0, Math.PI * 2);
+                ctx.arc(screenX, screenY - h / 2, w, 0, Math.PI * 2);
                 ctx.fill();
-            }
-
-            ctx.fillStyle = 'rgba(255,255,255,0.25)';
-            roundRect(x + 4, y + 3, w - 8, 10, 5); ctx.fill();
-
-            ctx.fillStyle = 'rgba(120,200,255,0.85)';
-            roundRect(x + 8, y + 12, w - 16, 14, 4); ctx.fill();
-            ctx.fillStyle = 'rgba(120,200,255,0.6)';
-            roundRect(x + 8, y + h - 24, w - 16, 12, 4); ctx.fill();
-
-            ctx.fillStyle = isPlayer ? '#fff59d' : '#ff5252';
-            roundRect(x + 5, isPlayer ? y + 4 : y + h - 8, 8, 5, 2); ctx.fill();
-            roundRect(x + w - 13, isPlayer ? y + 4 : y + h - 8, 8, 5, 2); ctx.fill();
-
-            if (isPlayer && carPerk === 'Сирена') {
-                const flash = Math.floor(Date.now() / 200) % 2;
-                ctx.fillStyle = flash === 0 ? '#ff1744' : '#2979ff';
-                roundRect(x + w/2 - 6, y - 4, 12, 4, 2);
-                ctx.fill();
-            }
-
-            if (isPlayer) {
-                const glow = ctx.createRadialGradient(x + 9, y + 6, 0, x + 9, y + 6, 15);
-                glow.addColorStop(0, 'rgba(255,245,157,0.4)');
-                glow.addColorStop(1, 'rgba(255,245,157,0)');
-                ctx.fillStyle = glow;
-                ctx.fillRect(x - 10, y - 10, 30, 30);
-                const glow2 = ctx.createRadialGradient(x + w - 9, y + 6, 0, x + w - 9, y + 6, 15);
-                glow2.addColorStop(0, 'rgba(255,245,157,0.4)');
-                glow2.addColorStop(1, 'rgba(255,245,157,0)');
-                ctx.fillStyle = glow2;
-                ctx.fillRect(x + w - 20, y - 10, 30, 30);
             }
         }
 
-        function drawCoin(coin) {
+        function drawCoin3D(coin) {
+            const depthY = coin.y;
+            if (depthY < 0 || depthY > 1.05) return;
+
+            const screenX = projectX(coin.x, depthY);
+            const screenY = projectY(depthY);
+            const scale = projectScale(depthY);
             const wobble = Math.sin(coin.phase) * 0.3 + 1;
-            const r = coinR * wobble;
-            const glow = ctx.createRadialGradient(coin.x, coin.y, 0, coin.x, coin.y, r * 2);
+            const r = coinR * scale * wobble;
+
+            if (r < 2) return;
+
+            // Свечение
+            const glow = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, r * 2);
             glow.addColorStop(0, 'rgba(255,215,0,0.5)');
             glow.addColorStop(1, 'rgba(255,215,0,0)');
             ctx.fillStyle = glow;
             ctx.beginPath();
-            ctx.arc(coin.x, coin.y, r * 2, 0, Math.PI * 2);
+            ctx.arc(screenX, screenY, r * 2, 0, Math.PI * 2);
             ctx.fill();
-            const grad = ctx.createRadialGradient(coin.x - r * 0.3, coin.y - r * 0.3, 0, coin.x, coin.y, r);
+
+            // Монетка
+            const grad = ctx.createRadialGradient(screenX - r * 0.3, screenY - r * 0.3, 0, screenX, screenY, r);
             grad.addColorStop(0, '#fff59d');
             grad.addColorStop(0.7, '#ffd700');
             grad.addColorStop(1, '#c9a300');
             ctx.fillStyle = grad;
             ctx.beginPath();
-            ctx.arc(coin.x, coin.y, r, 0, Math.PI * 2);
+            ctx.arc(screenX, screenY, r, 0, Math.PI * 2);
             ctx.fill();
-            ctx.strokeStyle = '#8a6d00';
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-            ctx.fillStyle = '#8a6d00';
-            ctx.font = 'bold 14px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('$', coin.x, coin.y + 1);
+
+            if (r > 6) {
+                ctx.strokeStyle = '#8a6d00';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                ctx.fillStyle = '#8a6d00';
+                ctx.font = `bold ${Math.floor(12 * scale)}px sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('$', screenX, screenY + 1);
+            }
         }
 
-        function drawObstacle(o) {
+        function drawObstacle3D(o) {
+            const depthY = o.y;
+            if (depthY < 0 || depthY > 1.05) return;
+
+            const screenX = projectX(o.x, depthY);
+            const screenY = projectY(depthY);
+            const scale = projectScale(depthY);
+
+            const w = 30 * scale;
+            const h = 30 * scale;
+
+            if (w < 3) return;
+
             if (o.type === 'cone') {
                 ctx.fillStyle = '#ff6b00';
                 ctx.beginPath();
-                ctx.moveTo(o.x + o.w/2, o.y);
-                ctx.lineTo(o.x + o.w, o.y + o.h);
-                ctx.lineTo(o.x, o.y + o.h);
+                ctx.moveTo(screenX, screenY - h);
+                ctx.lineTo(screenX + w / 2, screenY);
+                ctx.lineTo(screenX - w / 2, screenY);
                 ctx.closePath();
                 ctx.fill();
                 ctx.fillStyle = '#fff';
-                ctx.fillRect(o.x + o.w/2 - 6, o.y + o.h/2, 12, 4);
+                ctx.fillRect(screenX - w / 4, screenY - h / 2, w / 2, 3 * scale);
             } else if (o.type === 'pit') {
                 ctx.fillStyle = '#000';
                 ctx.beginPath();
-                ctx.ellipse(o.x + o.w/2, o.y + o.h/2, o.w/2, o.h/3, 0, 0, Math.PI * 2);
+                ctx.ellipse(screenX, screenY, w / 2, h / 3, 0, 0, Math.PI * 2);
                 ctx.fill();
-                ctx.strokeStyle = '#333';
-                ctx.lineWidth = 2;
-                ctx.stroke();
             } else if (o.type === 'puddle') {
                 ctx.fillStyle = 'rgba(50, 100, 200, 0.6)';
                 ctx.beginPath();
-                ctx.ellipse(o.x + o.w/2, o.y + o.h/2, o.w/2, o.h/3, 0, 0, Math.PI * 2);
+                ctx.ellipse(screenX, screenY, w / 2, h / 3, 0, 0, Math.PI * 2);
                 ctx.fill();
             }
         }
 
-        function drawRoadBonus(b) {
+        function drawRoadBonus3D(b) {
+            const depthY = b.y;
+            if (depthY < 0 || depthY > 1.05) return;
+
+            const screenX = projectX(b.x, depthY);
+            const screenY = projectY(depthY);
+            const scale = projectScale(depthY);
             const wobble = Math.sin(b.phase) * 0.3 + 1;
-            const r = 18 * wobble;
+            const r = 18 * scale * wobble;
+
+            if (r < 3) return;
+
             const icons = { boost: '⚡', magnet: '🧲', shield: '🛡️' };
             const colors = { boost: '#00d2ff', magnet: '#e67e22', shield: '#4ecca3' };
 
-            const glow = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, r * 2);
+            // Свечение
+            const glow = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, r * 2);
             glow.addColorStop(0, colors[b.type] + '80');
             glow.addColorStop(1, colors[b.type] + '00');
             ctx.fillStyle = glow;
             ctx.beginPath();
-            ctx.arc(b.x, b.y, r * 2, 0, Math.PI * 2);
+            ctx.arc(screenX, screenY, r * 2, 0, Math.PI * 2);
             ctx.fill();
 
+            // Круг
             ctx.fillStyle = colors[b.type];
             ctx.beginPath();
-            ctx.arc(b.x, b.y, r, 0, Math.PI * 2);
+            ctx.arc(screenX, screenY, r, 0, Math.PI * 2);
             ctx.fill();
 
-            ctx.fillStyle = '#fff';
-            ctx.font = 'bold 20px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(icons[b.type], b.x, b.y + 1);
-        }
-                    // ========== ОБНОВЛЕНИЕ ==========
-        function update() {
-            if (gameOver || !currentLevel || pauseActive) return;
-
-            const playerSpeed = 5 * (1 + (upgrades.tires || 0) * 0.05);
-            if (keys.left && player.x > roadLeft) player.x -= playerSpeed;
-            if (keys.right && player.x < roadRight - playerW) player.x += playerSpeed;
-
-            roadOffset = (roadOffset + speed) % 60;
-
-            if (slowActive) { slowTimer -= 1; if (slowTimer <= 0) slowActive = false; }
-            if (boostActive) { boostTimer -= 1; if (boostTimer <= 0) { boostActive = false; updateAbilities(); } }
-
-            // Погода меняется
-            weatherTimer -= 1;
-            if (weatherTimer <= 0) {
-                const roll = Math.random();
-                if (roll < 0.6) weather = 'clear';
-                else if (roll < 0.75) weather = 'rain';
-                else if (roll < 0.9) weather = 'snow';
-                else weather = 'fog';
-                weatherTimer = 600;
+            // Иконка
+            if (r > 8) {
+                ctx.fillStyle = '#fff';
+                ctx.font = `bold ${Math.floor(20 * scale)}px sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(icons[b.type], screenX, screenY + 1);
             }
-
-            const enemySpeedFactor = slowActive ? 0.4 : 1;
-            const boostFactor = boostActive ? 1.8 : 1;
-
-            spawnTimer += speed * boostFactor;
-            if (spawnTimer > currentLevel.spawnRate) { spawnEnemy(); spawnTimer = 0; }
-
-            coinTimer -= 1;
-            if (coinTimer <= 0) { spawnCoin(); coinTimer = 120 + Math.random() * 120; }
-
-            obstacleTimer -= 1;
-            if (obstacleTimer <= 0) { spawnObstacle(); obstacleTimer = 200 + Math.random() * 200; }
-
-            roadBonusTimer -= 1;
-            if (roadBonusTimer <= 0) { spawnRoadBonus(); roadBonusTimer = 400 + Math.random() * 300; }
-
-            // Враги
-            for (let i = enemies.length - 1; i >= 0; i--) {
-                enemies[i].y += (speed + enemies[i].speed) * enemySpeedFactor * boostFactor;
-
-                let ew = enemyW, eh = enemyH;
-                if (enemies[i].type === 'truck') { ew = enemyW + 20; eh = enemyH + 20; }
-                else if (enemies[i].type === 'moto') { ew = enemyW - 14; eh = enemyH - 10; }
-
-                if (player.x < enemies[i].x + ew && player.x + playerW > enemies[i].x &&
-                    player.y < enemies[i].y + eh && player.y + playerH > enemies[i].y) {
-                    const car = getCarById(equippedCar);
-                    if (shieldActive) {
-                        enemies.splice(i, 1); shieldActive = false;
-                        playTone(200, 0.3, 'sawtooth', 0.15, 0);
-                        updateAbilities();
-                        continue;
-                    }
-                    if (car.id === 'jeep' || car.id === 'fire') {
-                        enemies.splice(i, 1); score += 20; soundPoint();
-                        continue;
-                    }
-                    if (car.id === 'ambulance' && !ambulanceUsed) {
-                        enemies.splice(i, 1); ambulanceUsed = true;
-                        playTone(400, 0.3, 'sine', 0.15, 0);
-                        continue;
-                    }
-                    crashGame();
-                    return;
-                }
-
-                if (enemies[i] && enemies[i].y > H) {
-                    enemies.splice(i, 1);
-                    score += 10 * scoreMultiplier;
-                    scoreEl.textContent = Math.floor(score);
-                    soundPoint();
-                }
-            }
-
-            // Монеты
-            const car = getCarById(equippedCar);
-            const coinMultiplier = (car.id === 'taxi' ? 2 : 1) * coinBonusMultiplier;
-            for (let i = coins.length - 1; i >= 0; i--) {
-                coins[i].y += speed * boostFactor;
-                coins[i].phase += 0.15;
-                const dx = (player.x + playerW / 2) - coins[i].x;
-                const dy = (player.y + playerH / 2) - coins[i].y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist < (playerW / 2 + coinR) * magnetRange) {
-                    coins.splice(i, 1);
-                    wallet += coinMultiplier;
-                    coinsCollected += 1;
-                    totalCoins += 1;
-                    savePlayer(); updateWalletUI(); soundCoin();
-                    continue;
-                }
-                if (coins[i].y > H + 30) coins.splice(i, 1);
-            }
-
-            // Препятствия
-            for (let i = obstacles.length - 1; i >= 0; i--) {
-                obstacles[i].y += speed * boostFactor;
-
-                if (player.x < obstacles[i].x + obstacles[i].w &&
-                    player.x + playerW > obstacles[i].x &&
-                    player.y < obstacles[i].y + obstacles[i].h &&
-                    player.y + playerH > obstacles[i].y) {
-                    if (obstacles[i].type === 'cone' || obstacles[i].type === 'pit') {
-                        if (shieldActive) {
-                            obstacles.splice(i, 1); shieldActive = false;
-                            updateAbilities();
-                            continue;
-                        }
-                        if (car.id === 'jeep') {
-                            obstacles.splice(i, 1);
-                            continue;
-                        }
-                        crashGame();
-                        return;
-                    }
-                    // Лужа — просто замедление, не убивает
-                    if (obstacles[i].type === 'puddle') {
-                        speed = Math.max(currentLevel.startSpeed, speed - 0.1);
-                        obstacles.splice(i, 1);
-                        continue;
-                    }
-                }
-
-                if (obstacles[i] && obstacles[i].y > H + 50) obstacles.splice(i, 1);
-            }
-
-            // Бонусы на дороге
-            for (let i = roadBonuses.length - 1; i >= 0; i--) {
-                roadBonuses[i].y += speed * boostFactor;
-                roadBonuses[i].phase += 0.15;
-
-                const dx = (player.x + playerW / 2) - roadBonuses[i].x;
-                const dy = (player.y + playerH / 2) - roadBonuses[i].y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist < playerW / 2 + 20) {
-                    const type = roadBonuses[i].type;
-                    if (type === 'boost') {
-                        boostActive = true;
-                        boostTimer = 120;
-                        soundBoost();
-                    } else if (type === 'magnet') {
-                        magnetRange = 3;
-                        setTimeout(() => { magnetRange = 1 + (upgrades.magnet || 0) * 0.1; }, 5000);
-                        soundCoin();
-                    } else if (type === 'shield') {
-                        shieldActive = true;
-                        soundPurchase();
-                        updateAbilities();
-                    }
-                    roadBonuses.splice(i, 1);
-                    continue;
-                }
-
-                if (roadBonuses[i] && roadBonuses[i].y > H + 50) roadBonuses.splice(i, 1);
-            }
-
-            speed += currentLevel.speedRamp;
-            const oldScore = Math.floor(score / 1000);
-            score += speed * 0.05 * scoreMultiplier;
-            const newScore = Math.floor(score / 1000);
-            if (newScore > oldScore) { wallet += 10; savePlayer(); updateWalletUI(); }
-            scoreEl.textContent = Math.floor(score);
-            updateEngine();
         }
 
-        function crashGame() {
-            gameOver = true;
-            stopEngine();
-            soundCrash();
+        // ========== ОТРИСОВКА ДОРОГИ ==========
+        function drawRoad3D() {
+            // Небо
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, HORIZON_Y);
+            skyGrad.addColorStop(0, currentMap.skyTop);
+            skyGrad.addColorStop(1, currentMap.skyBot);
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, W, HORIZON_Y);
 
-            // Финализация
-            totalGames += 1;
-            const finalScore = Math.floor(score);
-            if (finalScore > bestScore) bestScore = finalScore;
-            if (finalScore > best) { best = finalScore; localStorage.setItem('r2_best', best); }
-            if (!playedMaps.includes(selectedMap)) playedMaps.push(selectedMap);
+            // Земля (обочины)
+            ctx.fillStyle = currentMap.decorColor;
+            ctx.fillRect(0, HORIZON_Y, W, H - HORIZON_Y);
 
-            // Ежедневные задания
-            dailyData.tasks.forEach(t => {
-                if (t.done) return;
-                if (t.id === 'd_coins') t.progress += coinsCollected;
-                if (t.id === 'd_score') t.progress = Math.max(t.progress, finalScore);
-                if (t.id === 'd_games') t.progress += 1;
-                if (t.progress >= t.goal) t.done = true;
-            });
+            // Дорога (трапеция)
+            const roadTopLeft = W / 2 - ROAD_TOP_W / 2;
+            const roadTopRight = W / 2 + ROAD_TOP_W / 2;
+            const roadBotLeft = W / 2 - ROAD_BOT_W / 2;
+            const roadBotRight = W / 2 + ROAD_BOT_W / 2;
 
-            // Кампания
-            if (currentCampaignLevel) {
-                const done = currentCampaignLevel.type === 'coins'
-                    ? coinsCollected >= currentCampaignLevel.goal
-                    : finalScore >= currentCampaignLevel.goal;
-                if (done && campaignProgress < currentCampaignLevel.id) {
-                    campaignProgress = currentCampaignLevel.id;
-                    wallet += currentCampaignLevel.reward;
-                    soundAchievement();
+            ctx.fillStyle = currentMap.roadColor;
+            ctx.beginPath();
+            ctx.moveTo(roadTopLeft, HORIZON_Y);
+            ctx.lineTo(roadTopRight, HORIZON_Y);
+            ctx.lineTo(roadBotRight, H);
+            ctx.lineTo(roadBotLeft, H);
+            ctx.closePath();
+            ctx.fill();
+
+            // Края дороги
+            ctx.strokeStyle = currentMap.roadEdge;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(roadTopLeft, HORIZON_Y);
+            ctx.lineTo(roadBotLeft, H);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(roadTopRight, HORIZON_Y);
+            ctx.lineTo(roadBotRight, H);
+            ctx.stroke();
+
+            // Разметка (полосы, уходящие вдаль)
+            ctx.fillStyle = currentMap.lineColor;
+            const stripeCount = 8;
+            for (let i = 0; i < stripeCount; i++) {
+                const baseY = (i * 60 + roadOffset) / (H - HORIZON_Y);
+                for (let s = 0; s < 3; s++) {
+                    const y1 = (baseY + s * 0.3) % 1;
+                    const y2 = Math.min(1, y1 + 0.1);
+                    if (y1 >= 1) continue;
+
+                    const sy1 = HORIZON_Y + y1 * (H - HORIZON_Y);
+                    const sy2 = HORIZON_Y + y2 * (H - HORIZON_Y);
+                    const w1 = (ROAD_TOP_W + y1 * (ROAD_BOT_W - ROAD_TOP_W)) * 0.02;
+                    const w2 = (ROAD_TOP_W + y2 * (ROAD_BOT_W - ROAD_TOP_W)) * 0.02;
+
+                    ctx.beginPath();
+                    ctx.moveTo(W / 2 - w1, sy1);
+                    ctx.lineTo(W / 2 + w1, sy1);
+                    ctx.lineTo(W / 2 + w2, sy2);
+                    ctx.lineTo(W / 2 - w2, sy2);
+                    ctx.closePath();
+                    ctx.fill();
                 }
             }
-
-            // XP
-            playerXP += Math.floor(finalScore / 100);
-            updatePlayerLevel();
-
-            checkAchievements();
-            savePlayer();
-            updateWalletUI();
-
-            showGameOver();
         }
 
-        // ========== ОТРИСОВКА ==========
+        // ========== ПОГОДА ==========
         function drawWeather() {
             if (weather === 'rain') {
                 ctx.strokeStyle = 'rgba(150, 200, 255, 0.5)';
                 ctx.lineWidth = 1;
-                for (let i = 0; i < 40; i++) {
+                for (let i = 0; i < 60; i++) {
                     const x = (i * 37 + Date.now() * 0.3) % W;
                     const y = (i * 53 + Date.now() * 0.5) % H;
                     ctx.beginPath();
                     ctx.moveTo(x, y);
-                    ctx.lineTo(x - 2, y + 10);
+                    ctx.lineTo(x - 2, y + 12);
                     ctx.stroke();
                 }
             } else if (weather === 'snow') {
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-                for (let i = 0; i < 30; i++) {
-                    const x = (i * 41 + Math.sin(Date.now() * 0.001 + i) * 20) % W;
-                    const y = (i * 67 + Date.now() * 0.1) % H;
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                for (let i = 0; i < 40; i++) {
+                    const x = (i * 41 + Math.sin(Date.now() * 0.001 + i) * 25) % W;
+                    const y = (i * 67 + Date.now() * 0.15) % H;
                     ctx.beginPath();
                     ctx.arc(x, y, 2, 0, Math.PI * 2);
                     ctx.fill();
                 }
             } else if (weather === 'fog') {
-                const grad = ctx.createLinearGradient(0, 0, 0, H);
-                grad.addColorStop(0, 'rgba(200, 200, 220, 0.15)');
-                grad.addColorStop(0.5, 'rgba(200, 200, 220, 0.25)');
-                grad.addColorStop(1, 'rgba(200, 200, 220, 0.15)');
+                const grad = ctx.createLinearGradient(0, HORIZON_Y - 50, 0, H);
+                grad.addColorStop(0, 'rgba(200, 200, 220, 0.5)');
+                grad.addColorStop(0.5, 'rgba(200, 200, 220, 0.2)');
+                grad.addColorStop(1, 'rgba(200, 200, 220, 0.1)');
                 ctx.fillStyle = grad;
                 ctx.fillRect(0, 0, W, H);
             }
         }
 
+        // ========== ПОЗДРАВЛЕНИЯ ==========
+        function drawCongrats() {
+            if (congratsTimer <= 0) return;
+
+            const alpha = Math.min(1, congratsTimer / 60);
+            ctx.save();
+            ctx.globalAlpha = alpha;
+
+            // Баннер
+            const bannerW = 300;
+            const bannerH = 80;
+            const bx = (W - bannerW) / 2;
+            const by = H / 2 - bannerH / 2;
+
+            const grad = ctx.createLinearGradient(bx, by, bx, by + bannerH);
+            grad.addColorStop(0, 'rgba(255, 215, 0, 0.95)');
+            grad.addColorStop(1, 'rgba(255, 140, 0, 0.95)');
+            ctx.fillStyle = grad;
+            roundRect(bx, by, bannerW, bannerH, 16);
+            ctx.fill();
+
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 3;
+            roundRect(bx, by, bannerW, bannerH, 16);
+            ctx.stroke();
+
+            // Текст
+            ctx.fillStyle = '#1a1a2e';
+            ctx.font = 'bold 32px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(congratsText, W / 2, H / 2 - 10);
+
+            ctx.font = 'bold 16px sans-serif';
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillText('+10 🪙  +100 очков', W / 2, H / 2 + 22);
+
+            ctx.restore();
+        }
+
+        // ========== ГЛАВНАЯ ОТРИСОВКА ==========
         function draw() {
             if (!currentLevel || !currentMap) return;
 
-            ctx.fillStyle = currentMap.bgColor;
-            ctx.fillRect(0, 0, W, H);
-            ctx.fillStyle = currentMap.decorColor;
-            ctx.fillRect(0, 0, roadLeft, H);
-            ctx.fillRect(roadRight, 0, W - roadRight, H);
-            ctx.fillStyle = currentMap.roadColor;
-            ctx.fillRect(roadLeft, 0, roadRight - roadLeft, H);
-            ctx.fillStyle = currentMap.lineColor;
-            for (let y = -60 + roadOffset; y < H; y += 60) {
-                ctx.fillRect(W / 2 - 3, y, 6, 30);
-            }
-            ctx.fillStyle = currentMap.roadEdge;
-            ctx.fillRect(roadLeft - 3, 0, 3, H);
-            ctx.fillRect(roadRight, 0, 3, H);
+            // Дорога (3D)
+            drawRoad3D();
 
-            // Препятствия
-            obstacles.forEach(drawObstacle);
+            // Объекты (по глубине — сначала далёкие, потом близкие)
+            const allObjects = [
+                ...coins.map(c => ({ type: 'coin', obj: c, y: c.y })),
+                ...roadBonuses.map(b => ({ type: 'bonus', obj: b, y: b.y })),
+                ...obstacles.map(o => ({ type: 'obstacle', obj: o, y: o.y })),
+                ...enemies.map(e => ({ type: 'enemy', obj: e, y: e.y }))
+            ];
+            allObjects.sort((a, b) => a.y - b.y);
 
-            // Монеты
-            coins.forEach(drawCoin);
-
-            // Бонусы на дороге
-            roadBonuses.forEach(drawRoadBonus);
-
-            // Враги
-            enemies.forEach(e => {
-                let w = enemyW, h = enemyH;
-                if (e.type === 'truck') { w = enemyW + 20; h = enemyH + 20; }
-                else if (e.type === 'moto') { w = enemyW - 14; h = enemyH - 10; }
-                drawCar(e.x, e.y, w, h, e.color, false);
+            allObjects.forEach(item => {
+                if (item.type === 'coin') drawCoin3D(item.obj);
+                else if (item.type === 'bonus') drawRoadBonus3D(item.obj);
+                else if (item.type === 'obstacle') drawObstacle3D(item.obj);
+                else if (item.type === 'enemy') {
+                    let w = enemyW, h = enemyH;
+                    if (item.obj.type === 'truck') { w = enemyW + 20; h = enemyH + 20; }
+                    else if (item.obj.type === 'moto') { w = enemyW - 14; h = enemyH - 10; }
+                    drawCar3D(item.obj.x, item.obj.y, item.obj.color, false, item.obj.type);
+                }
             });
 
-            // Игрок
+            // Игрок (всегда поверх)
             const myCar = getCarById(equippedCar);
-            drawCar(player.x, player.y, playerW, playerH, myCar.color, true);
+            drawCar3D(player.x, 0.95, myCar.color, true, 'player');
 
             // Погода
             drawWeather();
+
+            // Поздравление
+            drawCongrats();
 
             // Пауза
             if (pauseActive) {
@@ -1862,6 +2161,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
         if (window.Telegram && window.Telegram.WebApp) {
+            document.body.classList.add('tg-mode');
             window.Telegram.WebApp.expand();
             window.Telegram.WebApp.ready();
         }
